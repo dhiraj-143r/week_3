@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "PhishFilter",
+  "description": "AI-powered phishing detection for Gmail — scan any email for phishing indicators, homograph attacks, and brand impersonation in one click.",
+  "version": "1.0.0",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["https://mail.google.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  },
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  }
+}
