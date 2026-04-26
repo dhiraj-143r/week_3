@@ -140,6 +140,7 @@ export default function ScanPage() {
       window.removeEventListener("keydown", handleKeyDown);
       document.title = "PhishFilter";
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Particle Field ──
