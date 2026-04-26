@@ -80,25 +80,25 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       className="w-full max-w-4xl mx-auto"
     >
       {/* Main card */}
-      <div className="rounded-2xl border border-white/[0.06] bg-[#111111] overflow-hidden shadow-2xl shadow-black/50">
+      <div className="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#161616] overflow-hidden">
         {/* Card header */}
-        <div className="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-              <svg className="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        <div className="px-7 py-5 border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-[rgba(255,255,255,0.04)] border border-accent/10 flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-white">Email Analysis</h2>
-              <p className="text-xs text-white/40">Paste raw email source including headers</p>
+              <h2 className="text-base font-serif font-bold text-[#f5f5f5]">Email Analysis</h2>
+              <p className="text-xs text-[#666] mt-0.5">Paste raw email source including headers</p>
             </div>
           </div>
-          <span className="text-xs text-white/20 font-mono">
+          <span className="text-xs text-[#666] font-mono tracking-wider">
             {emailContent.length.toLocaleString()} chars
           </span>
         </div>
@@ -112,8 +112,8 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
             onKeyDown={handleKeyDown}
             placeholder="Paste your suspicious email here — headers, body, everything..."
             disabled={isLoading}
-            className="w-full min-h-[300px] p-6 bg-transparent text-white/90 text-sm font-mono 
-                       placeholder:text-white/15 resize-y outline-none border-none
+            className="w-full min-h-[300px] p-7 bg-transparent text-[#e5e5e5] text-sm font-mono 
+                       placeholder:text-[#666]/50 resize-y outline-none border-none
                        disabled:opacity-50 disabled:cursor-not-allowed
                        leading-relaxed"
             spellCheck={false}
@@ -126,7 +126,7 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-[#111111]/90 backdrop-blur-sm flex flex-col items-center justify-center gap-6"
+                className="absolute inset-0 bg-[#0a0a0a]/90 backdrop-blur-md flex flex-col items-center justify-center gap-6"
               >
                 {/* Scanning animation */}
                 <div className="relative w-20 h-20">
@@ -134,19 +134,19 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 rounded-full border-2 border-transparent border-t-indigo-500 border-r-indigo-500/30"
+                    className="absolute inset-0 rounded-full border-2 border-transparent border-t-accent border-r-accent/30"
                   />
                   {/* Middle ring */}
                   <motion.div
                     animate={{ rotate: -360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-2 rounded-full border-2 border-transparent border-t-purple-500 border-l-purple-500/30"
+                    className="absolute inset-2 rounded-full border-2 border-transparent border-t-safe border-l-safe/30"
                   />
                   {/* Inner ring */}
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-4 rounded-full border-2 border-transparent border-b-indigo-400 border-r-indigo-400/30"
+                    className="absolute inset-4 rounded-full border-2 border-transparent border-b-accent border-r-accent/30"
                   />
                   {/* Center icon */}
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -154,7 +154,7 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
                       animate={{ scale: [1, 1.15, 1] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
                     >
-                      <svg className="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                       </svg>
                     </motion.div>
@@ -169,7 +169,7 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3 }}
-                    className="text-white/60 text-sm font-medium"
+                    className="text-[#a3a3a3] text-sm font-medium"
                   >
                     {SCANNING_MESSAGES[messageIndex]}
                   </motion.p>
@@ -181,7 +181,7 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
                     initial={{ width: "0%" }}
                     animate={{ width: "100%" }}
                     transition={{ duration: SCANNING_MESSAGES.length * 2.2, ease: "linear" }}
-                    className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                    className="h-full bg-gradient-to-r from-accent to-safe rounded-full"
                   />
                 </div>
               </motion.div>
@@ -190,14 +190,14 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
         </div>
 
         {/* Attachment area */}
-        <div className="border-t border-white/[0.06] px-6 py-3">
+        <div className="border-t border-[rgba(255,255,255,0.08)] px-7 py-4">
           <div
             onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-indigo-500/30", "bg-indigo-500/5"); }}
-            onDragLeave={(e) => { e.currentTarget.classList.remove("border-indigo-500/30", "bg-indigo-500/5"); }}
-            onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove("border-indigo-500/30", "bg-indigo-500/5"); handleFileAdd(e.dataTransfer.files); }}
-            className="rounded-lg border border-dashed border-white/[0.08] px-4 py-2.5 cursor-pointer
-                       hover:border-white/[0.15] hover:bg-white/[0.01] transition-all"
+            onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-accent/30", "bg-accent/5"); }}
+            onDragLeave={(e) => { e.currentTarget.classList.remove("border-accent/30", "bg-accent/5"); }}
+            onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove("border-accent/30", "bg-accent/5"); handleFileAdd(e.dataTransfer.files); }}
+            className="rounded-xl border border-dashed border-white/[0.06] px-5 py-3 cursor-pointer
+                       hover:border-[rgba(255,255,255,0.15)] hover:bg-accent/[0.02] transition-all duration-300"
           >
             <input
               ref={fileInputRef}
@@ -208,10 +208,10 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
               className="hidden"
             />
             <div className="flex items-center gap-3">
-              <svg className="w-4 h-4 text-white/20 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 text-[#666] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
               </svg>
-              <span className="text-xs text-white/30">
+              <span className="text-xs text-[#666]">
                 {attachedFiles.length === 0
                   ? "Attach suspicious PDFs, images, or HTML files (optional)"
                   : `${attachedFiles.length} file${attachedFiles.length > 1 ? "s" : ""} attached`}
@@ -221,14 +221,14 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
 
           {/* Attached files list */}
           {attachedFiles.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               {attachedFiles.map((file, i) => (
-                <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-xs text-purple-400">
+                <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[rgba(255,255,255,0.04)] border border-accent/15 text-xs text-white">
                   {file.type === "application/pdf" ? "📄" : file.type.startsWith("image/") ? "🖼️" : "🌐"}
                   {file.name.length > 20 ? file.name.slice(0, 17) + "..." : file.name}
                   <button
                     onClick={(e) => { e.stopPropagation(); handleRemoveFile(i); }}
-                    className="ml-0.5 text-purple-400/50 hover:text-purple-400 transition-colors"
+                    className="ml-0.5 text-white/50 hover:text-white transition-colors"
                   >
                     ✕
                   </button>
@@ -239,10 +239,10 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
         </div>
 
         {/* Optional fields toggle */}
-        <div className="border-t border-white/[0.06]">
+        <div className="border-t border-[rgba(255,255,255,0.08)]">
           <button
             onClick={() => setShowOptional(!showOptional)}
-            className="w-full px-6 py-3 flex items-center justify-between text-xs text-white/30 hover:text-white/50 transition-colors"
+            className="w-full px-7 py-4 flex items-center justify-between text-xs text-[#666] hover:text-[#a3a3a3] transition-colors"
           >
             <span className="flex items-center gap-2">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -270,27 +270,25 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="px-6 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="px-7 pb-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-white/30 mb-1.5">Email for report delivery</label>
+                    <label className="block text-xs text-[#666] mb-2 font-medium">Email for report delivery</label>
                     <input
                       type="email"
                       value={userEmail}
                       onChange={(e) => setUserEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-sm text-white/80 
-                                 placeholder:text-white/15 outline-none focus:border-indigo-500/30 transition-colors"
+                      className="input-field"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-white/30 mb-1.5">WhatsApp for notification</label>
+                    <label className="block text-xs text-[#666] mb-2 font-medium">WhatsApp for notification</label>
                     <input
                       type="tel"
                       value={userPhone}
                       onChange={(e) => setUserPhone(e.target.value)}
                       placeholder="+91 98765 43210"
-                      className="w-full px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06] text-sm text-white/80 
-                                 placeholder:text-white/15 outline-none focus:border-indigo-500/30 transition-colors"
+                      className="input-field"
                     />
                   </div>
                 </div>
@@ -300,11 +298,11 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
         </div>
 
         {/* Submit bar */}
-        <div className="px-6 py-4 border-t border-white/[0.06] flex items-center justify-between gap-4">
-          <p className="text-xs text-white/20 hidden sm:block">
-            <kbd className="px-1.5 py-0.5 rounded border border-white/10 text-[10px]">⌘</kbd>
+        <div className="px-7 py-5 border-t border-[rgba(255,255,255,0.08)] flex items-center justify-between gap-4">
+          <p className="text-xs text-[#666] hidden sm:block">
+            <kbd className="px-1.5 py-0.5 rounded-md border border-white/[0.06] text-[10px] bg-white/[0.02]">⌘</kbd>
             {" + "}
-            <kbd className="px-1.5 py-0.5 rounded border border-white/10 text-[10px]">Enter</kbd>
+            <kbd className="px-1.5 py-0.5 rounded-md border border-white/[0.06] text-[10px] bg-white/[0.02]">Enter</kbd>
             {" to scan"}
           </p>
 
@@ -312,11 +310,7 @@ export default function EmailInput({ onSubmit, isLoading, prefillContent, onPref
             id="scan-email-btn"
             onClick={handleSubmit}
             disabled={!emailContent.trim() || isLoading}
-            className="flex items-center gap-2.5 px-6 py-2.5 rounded-xl font-semibold text-sm
-                       bg-indigo-500 text-white shadow-lg shadow-indigo-500/25
-                       hover:bg-indigo-400 hover:shadow-indigo-400/30
-                       disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-indigo-500
-                       transition-all duration-200 active:scale-[0.97]"
+            className="btn-primary"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />

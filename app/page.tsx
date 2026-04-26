@@ -1,373 +1,597 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import toast from "react-hot-toast";
-import EmailInput from "@/components/EmailInput";
-import ForensicReport from "@/components/ForensicReport";
-import ThreatTimeline, { saveToTimeline } from "@/components/ThreatTimeline";
-import InboxScanner from "@/components/InboxScanner";
-import EmailWatchdog from "@/components/EmailWatchdog";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import { SAMPLE_PHISHING_EMAIL, MOCK_REPORT } from "@/lib/demo-data";
+import React, { useRef, useEffect } from "react";
+import { motion, useInView } from "framer-motion";
+import Link from "next/link";
+import HowItWorks from "@/components/HowItWorks";
+import Capabilities from "@/components/Capabilities";
+
+/* ── Animation helpers ──────────────────────────────────── */
+const ease = [0.16, 1, 0.3, 1] as const;
+
+function AnimSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.div ref={ref} initial="hidden" animate={inView ? "visible" : "hidden"} variants={{ hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease, delay } } }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
+const PROBLEMS = [
+  { title: "No more missed phishing emails.", desc: "Attackers craft emails that look identical to real ones. You can't tell the difference — but AI can. Header anomalies, domain spoofing, and homograph tricks get caught instantly." },
+  { title: "No more second-guessing links.", desc: "Is that URL safe? The AI scans every link through VirusTotal, unshortens redirects, takes safe screenshots, and checks for look-alike domains — all in seconds." },
+  { title: "No more manual monitoring.", desc: "Connect your inbox once. The IMAP IDLE watchdog detects threats the moment they arrive — WhatsApp + email alerts fire instantly, 24/7." },
+];
+
+
 
 export default function Home() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [reportData, setReportData] = useState<any>(null);
-  const [demoMode, setDemoMode] = useState(false);
-  const [samplePrefill, setSamplePrefill] = useState("");
-  const [activeTab, setActiveTab] = useState<"paste" | "inbox" | "watchdog">("paste");
-  const reportRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // ── Submit handler ────────────────────────────────────
-  const handleSubmit = useCallback(async (emailContent: string, userEmail?: string, userPhone?: string, files?: File[]) => {
-    setIsLoading(true);
-    setReportData(null);
-
-    // Demo mode — instant mock report
-    if (demoMode) {
-      await new Promise((r) => setTimeout(r, 2000));
-      const mockData = { ...MOCK_REPORT, timestamp: new Date().toISOString() };
-      setReportData(mockData);
-      saveToTimeline(mockData);
-      toast.success("Demo analysis complete!");
-      setIsLoading(false);
-      setTimeout(() => reportRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
-      return;
-    }
-
-    try {
-      // 1. Analyze email content
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailContent, userEmail, userPhone }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Analysis failed");
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let animId: number;
+    let mouse = { x: -999, y: -999 };
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener("resize", resize);
+    const onMove = (e: MouseEvent) => { mouse.x = e.clientX; mouse.y = e.clientY; };
+    window.addEventListener("mousemove", onMove);
+    const COUNT = 180;
+    const particles = Array.from({ length: COUNT }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 2 + 0.5,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      alpha: Math.random() * 0.5 + 0.1,
+    }));
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const p of particles) {
+        const dx = p.x - mouse.x;
+        const dy = p.y - mouse.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          const force = (120 - dist) / 120 * 0.8;
+          p.vx += (dx / dist) * force;
+          p.vy += (dy / dist) * force;
+        }
+        p.vx *= 0.98; p.vy *= 0.98;
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(220,220,230,${p.alpha})`;
+        ctx.fill();
       }
-
-      // 2. Scan attachments in parallel if any files attached
-      let attachmentResults: Array<{ fileName: string; verdict: string; score: number; summary: string }> = [];
-      if (files && files.length > 0) {
-        toast("Scanning attachments...", { icon: "📎" });
-        const attPromises = files.map(async (file) => {
-          try {
-            const formData = new FormData();
-            formData.append("file", file);
-            const attRes = await fetch("/api/scan-attachment", { method: "POST", body: formData });
-            const attData = await attRes.json();
-            return attData.success ? attData.result : { fileName: file.name, verdict: "ERROR", score: 0, summary: attData.error };
-          } catch {
-            return { fileName: file.name, verdict: "ERROR", score: 0, summary: "Scan failed" };
-          }
-        });
-        attachmentResults = await Promise.all(attPromises);
-      }
-
-      // Merge attachment results into report
-      const finalData = { ...data, attachmentResults };
-      setReportData(finalData);
-      saveToTimeline(finalData);
-
-      const attSummary = attachmentResults.length > 0
-        ? ` + ${attachmentResults.length} attachment${attachmentResults.length > 1 ? "s" : ""} scanned`
-        : "";
-      toast.success(`Forensic analysis complete!${attSummary}`);
-
-      setTimeout(() => reportRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
-    } catch (error: unknown) {
-      const err = error as { message?: string };
-      toast.error(err.message || "Failed to analyze email");
-      console.error("[PhishFilter] Analysis error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [demoMode]);
-
-  // ── Load report from timeline ─────────────────────────
-  // eslint-disable-next-line
-  const handleSelectReport = useCallback((report: any) => {
-    setReportData(report);
-    setTimeout(() => reportRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 300);
-  }, []);
-
-  // ── Sample email prefill ──────────────────────────────
-  const handleLoadSample = useCallback(() => {
-    setSamplePrefill(SAMPLE_PHISHING_EMAIL);
-    toast.success("Sample phishing email loaded!");
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); window.removeEventListener("mousemove", onMove); };
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
-      {/* ── Background effects ─────────────────────────────── */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute -top-[400px] left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full bg-indigo-500/[0.04] blur-[120px]" />
-        <div className="absolute -bottom-[300px] right-0 w-[600px] h-[600px] rounded-full bg-purple-500/[0.03] blur-[100px]" />
-        <div
-          className="absolute inset-0 opacity-[0.015]"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-            `,
-            backgroundSize: "60px 60px",
-          }}
-        />
-      </div>
+    <main style={{ background: "var(--bg-primary)", minHeight: "100vh" }}>
+      {/* ═══ PARTICLE CANVAS ═══ */}
+      <canvas ref={canvasRef} style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", filter: "blur(1.5px)", opacity: 0.7 }} />
 
-      {/* ── Navbar ─────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 border-b border-white/[0.04] bg-[#0a0a0a]/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-base font-bold text-white tracking-tight">PhishFilter</h1>
-              <p className="text-[10px] text-white/30 -mt-0.5 hidden sm:block">AI-Powered Phishing Detection</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Demo mode toggle */}
-            <button
-              onClick={() => { setDemoMode(!demoMode); toast(demoMode ? "Live mode" : "Demo mode — mock data", { icon: demoMode ? "🔴" : "🟢" }); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
-                demoMode
-                  ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                  : "bg-white/[0.02] border-white/[0.06] text-white/25 hover:text-white/40"
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${demoMode ? "bg-amber-400" : "bg-white/20"}`} />
-              {demoMode ? "Demo" : "Live"}
-            </button>
-
-            <div className="h-5 w-px bg-white/[0.06]" />
-            <span className="text-xs text-white/20 font-mono">v1.0</span>
+      {/* ═══ NAVBAR ═══ */}
+      <nav className="nav">
+        <div className="nav-inner">
+          <button className="btn-ghost" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "1.1rem" }} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            <span className="serif-italic" style={{ fontSize: "1.15rem" }}>Phish</span>
+            <span style={{ fontWeight: 700, letterSpacing: "-0.02em" }}>Filter</span>
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <a href="#how" className="btn-ghost">How it works</a>
+            <a href="#capabilities" className="btn-ghost">Features</a>
+            <Link href="/scan" className="btn-primary" style={{ padding: "10px 20px", fontSize: "0.85rem", textDecoration: "none" }}>
+              Start scanning
+            </Link>
           </div>
         </div>
       </nav>
 
-      {/* ── Hero Section ───────────────────────────────────── */}
-      <div className="relative z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center pt-12 sm:pt-16 pb-8"
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300 mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-              Powered by Grok AI + VirusTotal + Firecrawl
-            </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mb-4">
-              Detect phishing emails
-              <br />
-              <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
-                before they detect you
-              </span>
-            </h2>
-            <p className="text-base sm:text-lg text-white/40 max-w-2xl mx-auto leading-relaxed">
-              Paste any suspicious email for instant AI forensic analysis — header inspection,
-              URL scanning, homograph detection, and brand impersonation checks.
-            </p>
-          </motion.div>
+      {/* ═══ HERO — Full-screen animated blob background ═══ */}
+      <section
+        className="hero-blob-section"
+        suppressHydrationWarning
+        onMouseMove={(e) => {
+          const el = e.currentTarget;
+          const cx = e.clientX / window.innerWidth - 0.5;
+          const cy = e.clientY / window.innerHeight - 0.5;
+          el.style.setProperty("--px", `${cx}`);
+          el.style.setProperty("--py", `${cy}`);
+        }}
+      >
+        <style dangerouslySetInnerHTML={{ __html: `
+          .hero-blob-section {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            min-height: 600px;
+            background: #0a0a0a;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+          }
 
-          {/* ── Tab Switcher ───────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex justify-center mb-8"
-          >
-            <div className="inline-flex rounded-xl bg-white/[0.02] border border-white/[0.06] p-1">
-              <button
-                onClick={() => setActiveTab("paste")}
-                className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                  activeTab === "paste"
-                    ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/20"
-                    : "text-white/30 hover:text-white/50"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Paste Email
-              </button>
-              <button
-                onClick={() => setActiveTab("inbox")}
-                className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                  activeTab === "inbox"
-                    ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/20"
-                    : "text-white/30 hover:text-white/50"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Inbox Scanner
-              </button>
-              <button
-                onClick={() => setActiveTab("watchdog")}
-                className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                  activeTab === "watchdog"
-                    ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/20"
-                    : "text-white/30 hover:text-white/50"
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                Watchdog
-                <span className="px-1.5 py-0.5 rounded text-[9px] bg-orange-500/15 text-orange-400 font-bold">LIVE</span>
-              </button>
-            </div>
-          </motion.div>
+          /* ── Blobs ─────────────────────────────── */
+          .hero-blob {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            will-change: transform;
+            animation-direction: alternate;
+            animation-timing-function: ease-in-out;
+            animation-iteration-count: infinite;
+          }
+          .hero-blob-1 {
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(220,220,230,0.35), transparent 70%);
+            filter: blur(80px); opacity: 0.8;
+            top: -15%; left: -10%;
+            animation: blobDrift1 10s ease-in-out infinite alternate;
+          }
+          .hero-blob-2 {
+            width: 550px; height: 550px;
+            background: radial-gradient(circle, rgba(210,210,225,0.30), transparent 70%);
+            filter: blur(80px); opacity: 0.75;
+            bottom: -10%; right: -8%;
+            animation: blobDrift2 13s ease-in-out infinite alternate;
+            animation-delay: -4s;
+          }
+          .hero-blob-3 {
+            width: 450px; height: 450px;
+            background: radial-gradient(circle, rgba(230,230,240,0.25), transparent 70%);
+            filter: blur(80px); opacity: 0.7;
+            top: 30%; left: 35%;
+            animation: blobDrift3 9s ease-in-out infinite alternate;
+            animation-delay: -7s;
+          }
+          .hero-blob-4 {
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, rgba(220,220,235,0.35), transparent 70%);
+            filter: blur(80px); opacity: 0.8;
+            top: 5%; right: 10%;
+            animation: blobDrift4 15s ease-in-out infinite alternate;
+            animation-delay: -2s;
+          }
+          .hero-blob-5 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(240,240,250,0.28), transparent 70%);
+            filter: blur(90px); opacity: 0.7;
+            bottom: 15%; left: -5%;
+            animation: blobDrift5 12s ease-in-out infinite alternate;
+            animation-delay: -3s;
+          }
+          .hero-blob-6 {
+            width: 380px; height: 380px;
+            background: radial-gradient(circle, rgba(215,215,230,0.25), transparent 70%);
+            filter: blur(70px); opacity: 0.65;
+            top: -5%; right: 30%;
+            animation: blobDrift6 11s ease-in-out infinite alternate;
+            animation-delay: -6s;
+          }
+          .hero-blob-7 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(235,235,245,0.32), transparent 70%);
+            filter: blur(70px); opacity: 0.75;
+            bottom: 5%; right: 25%;
+            animation: blobDrift7 14s ease-in-out infinite alternate;
+            animation-delay: -1s;
+          }
 
-          {/* ── Tab Content ─────────────────────────────────── */}
-          <AnimatePresence mode="wait">
-            {activeTab === "paste" ? (
-              <motion.div key="paste" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                {/* ── Email Input ──────────────────────────────── */}
-                <ErrorBoundary fallbackLabel="Email Input">
-                  <EmailInput
-                    onSubmit={handleSubmit}
-                    isLoading={isLoading}
-                    prefillContent={samplePrefill}
-                    onPrefillConsumed={() => setSamplePrefill("")}
-                  />
-                </ErrorBoundary>
+          @keyframes blobDrift1 {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 80px) scale(1.1); }
+          }
+          @keyframes blobDrift2 {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-80px, -60px) scale(1.2); }
+          }
+          @keyframes blobDrift3 {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(40px, -70px) scale(0.9); }
+          }
+          @keyframes blobDrift4 {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-50px, 90px) scale(1.15); }
+          }
+          @keyframes blobDrift5 {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(70px, -50px) scale(1.08); }
+          }
+          @keyframes blobDrift6 {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-40px, 60px) scale(1.12); }
+          }
+          @keyframes blobDrift7 {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(55px, 40px) scale(0.92); }
+          }
 
-                {/* ── Action Buttons Row ────────────────────────── */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="flex flex-wrap justify-center gap-2 mt-6"
-                >
-                  <button
-                    onClick={handleLoadSample}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium
-                               bg-white/[0.02] border border-white/[0.06] text-white/30
-                               hover:bg-indigo-500/10 hover:border-indigo-500/20 hover:text-indigo-300 transition-all"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Load Sample Phishing Email
-                  </button>
-                </motion.div>
-              </motion.div>
-            ) : activeTab === "inbox" ? (
-              <motion.div key="inbox" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                <ErrorBoundary fallbackLabel="Inbox Scanner">
-                  <InboxScanner />
-                </ErrorBoundary>
-              </motion.div>
-            ) : (
-              <motion.div key="watchdog" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                <ErrorBoundary fallbackLabel="Email Watchdog">
-                  <EmailWatchdog />
-                </ErrorBoundary>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          /* ── Entrance animations ──────────────── */
+          @keyframes heroFadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+          }
+          @keyframes heroSlideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes heroScaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to   { opacity: 1; transform: scale(1); }
+          }
+          @keyframes waveDraw {
+            from { stroke-dashoffset: 200; }
+            to   { stroke-dashoffset: 0; }
+          }
 
-          {/* Feature pills */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="flex flex-wrap justify-center gap-2 mt-8 mb-10"
-          >
-            {[
-              "Header Analysis", "URL Scanning", "Homograph Detection", "Brand Impersonation",
-              "VirusTotal", "Screenshot Preview", "SPF/DKIM/DMARC", "AI Forensics", "IMAP Inbox",
-              "PDF Scanner", "Image Vision", "QR Detection",
-            ].map((feature) => (
-              <span key={feature} className="px-3 py-1 rounded-full text-[11px] text-white/25 border border-white/[0.04] bg-white/[0.01]">
-                {feature}
-              </span>
-            ))}
-          </motion.div>
+          .hero-label {
+            opacity: 0;
+            animation: heroFadeIn 0.6s ease forwards;
+            animation-delay: 0.2s;
+          }
+          .hero-wave {
+            opacity: 0;
+            animation: heroFadeIn 0.4s ease forwards;
+            animation-delay: 0.35s;
+          }
+          .hero-wave path {
+            stroke-dasharray: 200;
+            stroke-dashoffset: 200;
+            animation: waveDraw 0.8s ease forwards;
+            animation-delay: 0.4s;
+          }
+          .hero-headline {
+            opacity: 0;
+            animation: heroSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation-delay: 0.6s;
+          }
+          .hero-subtitle {
+            opacity: 0;
+            animation: heroFadeIn 0.5s ease forwards;
+            animation-delay: 1s;
+          }
+          .hero-cta {
+            opacity: 0;
+            animation: heroScaleIn 0.4s ease forwards;
+            animation-delay: 1.2s;
+          }
 
-          {/* ── Threat Timeline ──────────────────────────── */}
-          <ErrorBoundary fallbackLabel="Threat Timeline">
-            <div className="mb-8">
-              <ThreatTimeline onSelectReport={handleSelectReport} />
-            </div>
-          </ErrorBoundary>
+          /* ── Bottom bar ───────────────────────── */
+          .hero-bottom-bar {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            z-index: 3;
+          }
+          .hero-bottom-bar span {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 0.03em;
+          }
 
-          {/* ── Report Section ───────────────────────────── */}
-          <div ref={reportRef}>
-            <AnimatePresence>
-              {isLoading && !reportData && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="w-full max-w-4xl mx-auto space-y-4 mb-12"
-                >
-                  {/* Skeleton loader */}
-                  <div className="rounded-2xl border border-white/[0.06] bg-[#111111] p-6 sm:p-8">
-                    <div className="flex flex-col sm:flex-row items-center gap-6">
-                      <div className="w-32 h-32 rounded-full bg-white/[0.03] animate-pulse" />
-                      <div className="flex-1 space-y-3 w-full">
-                        <div className="h-7 bg-white/[0.03] rounded-lg w-2/3 animate-pulse" />
-                        <div className="h-4 bg-white/[0.03] rounded w-1/2 animate-pulse" />
-                        <div className="h-4 bg-white/[0.03] rounded w-full animate-pulse" />
-                        <div className="h-4 bg-white/[0.03] rounded w-4/5 animate-pulse" />
-                      </div>
-                    </div>
-                  </div>
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="rounded-xl border border-white/[0.06] bg-[#111111] p-5">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-16 h-5 bg-white/[0.03] rounded-full animate-pulse" />
-                        <div className="w-10 h-4 bg-white/[0.03] rounded animate-pulse" />
-                      </div>
-                      <div className="h-4 bg-white/[0.03] rounded w-3/4 animate-pulse mb-2" />
-                      <div className="h-3 bg-white/[0.03] rounded w-1/2 animate-pulse" />
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+          /* ── Responsive ───────────────────────── */
+          @media (max-width: 768px) {
+            .hero-blob-1 { width: 420px; height: 420px; }
+            .hero-blob-2 { width: 330px; height: 330px; }
+            .hero-blob-3 { width: 270px; height: 270px; }
+            .hero-blob-4 { width: 210px; height: 210px; }
+            .hero-blob-5 { width: 300px; height: 300px; }
+            .hero-blob-6 { width: 230px; height: 230px; }
+            .hero-blob-7 { width: 180px; height: 180px; }
+            .hero-bottom-bar { padding: 16px 20px; }
+            .hero-bottom-bar span { font-size: 0.7rem; }
+          }
+        `}} />
 
-            <AnimatePresence>
-              {reportData && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                    <span className="text-xs text-white/20 font-medium uppercase tracking-wider">Forensic Report</span>
-                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                  </div>
+        {/* Blobs */}
+        <div className="hero-blob hero-blob-1" />
+        <div className="hero-blob hero-blob-2" />
+        <div className="hero-blob hero-blob-3" />
+        <div className="hero-blob hero-blob-4" />
+        <div className="hero-blob hero-blob-5" />
+        <div className="hero-blob hero-blob-6" />
+        <div className="hero-blob hero-blob-7" />
 
-                  <ErrorBoundary fallbackLabel="Forensic Report">
-                    {/* eslint-disable-next-line */}
-                    <ForensicReport data={reportData as any} />
-                  </ErrorBoundary>
-                </motion.div>
-              )}
-            </AnimatePresence>
+        {/* Centered content */}
+        <div style={{ position: "relative", zIndex: 2, textAlign: "center", maxWidth: 800, padding: "0 24px" }}>
+          {/* Label */}
+          <p className="hero-label" style={{
+            fontSize: "0.7rem", fontWeight: 600,
+            letterSpacing: "0.15em", textTransform: "uppercase" as const,
+            color: "rgba(255,255,255,0.4)", marginBottom: 20,
+          }}>
+            PHISHFILTER · AI SECURITY AGENT
+          </p>
+
+          {/* Wavy SVG line */}
+          <svg className="hero-wave" width="80" height="30" viewBox="0 0 80 30" fill="none" style={{ display: "block", margin: "0 auto 24px" }}>
+            <path
+              d="M0 15 Q10 5 20 15 Q30 25 40 15 Q50 5 60 15 Q70 25 80 15"
+              stroke="rgba(255,255,255,0.5)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </svg>
+
+          {/* Headline */}
+          <h1 className="hero-headline" style={{
+            fontFamily: "'Playfair Display', Georgia, serif",
+            fontStyle: "italic", fontWeight: 700,
+            fontSize: "clamp(3rem, 8vw, 6rem)",
+            lineHeight: 1.08, letterSpacing: "-0.03em",
+            color: "#fff", margin: "0 0 16px",
+          }}>
+            Paste. Analyze.<br />Protect.
+          </h1>
+
+          {/* Subtitle */}
+          <p className="hero-subtitle" style={{
+            fontSize: "1.1rem", color: "rgba(255,255,255,0.5)",
+            lineHeight: 1.7, maxWidth: 500, margin: "0 auto",
+          }}>
+            Four steps. The AI does the forensics. You get the verdict.
+          </p>
+
+          {/* CTA */}
+          <div className="hero-cta" style={{ marginTop: 40 }}>
+            <Link
+              href="/scan"
+              style={{
+                display: "inline-block",
+                background: "#fff", color: "#0a0a0a",
+                borderRadius: 999, padding: "14px 32px",
+                fontSize: "1rem", fontWeight: 600,
+                textDecoration: "none", border: "none",
+                transition: "background 0.2s ease, transform 0.2s ease",
+              }}
+              onMouseEnter={(e) => { (e.target as HTMLElement).style.background = "#e0e0e0"; (e.target as HTMLElement).style.transform = "scale(1.04)"; }}
+              onMouseLeave={(e) => { (e.target as HTMLElement).style.background = "#fff"; (e.target as HTMLElement).style.transform = "scale(1)"; }}
+            >
+              → Try it free
+            </Link>
           </div>
         </div>
-      </div>
 
-      {/* ── Footer ─────────────────────────────────────────── */}
-      <footer className="relative z-10 border-t border-white/[0.04] mt-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-between">
-          <p className="text-xs text-white/15">© {new Date().getFullYear()} PhishFilter — Built for Hackathon</p>
-          <p className="text-xs text-white/15">Grok AI · VirusTotal · Firecrawl · Locus</p>
+        {/* Bottom info bar */}
+        <div className="hero-bottom-bar">
+          <span>12+ Security Checks</span>
+          <span>Real-time Monitoring</span>
+          <span>AI-Powered Verdicts</span>
         </div>
-      </footer>
+      </section>
+
+      <div className="section-divider" />
+
+      {/* ═══ THE PROBLEM — Aurora Borealis Background ═══ */}
+      <section id="problems" className="section" style={{ position: "relative", overflow: "hidden", background: "#0a0a0a" }} suppressHydrationWarning>
+        <style dangerouslySetInnerHTML={{ __html: `
+          /* ── Aurora bands ──────────────────────── */
+          .aurora-band {
+            position: absolute;
+            width: 160%;
+            left: -30%;
+            border-radius: 50%;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            z-index: 0;
+          }
+          .aurora-band-1 {
+            background: rgba(220,220,230,0.35);
+            top: 5%; height: 220px;
+            filter: blur(70px); opacity: 0.25;
+            animation: aurora1 18s ease-in-out infinite alternate;
+          }
+          .aurora-band-2 {
+            background: rgba(210,210,225,0.30);
+            top: 20%; height: 200px;
+            filter: blur(70px); opacity: 0.22;
+            animation: aurora2 22s ease-in-out infinite alternate;
+            animation-delay: -5s;
+          }
+          .aurora-band-3 {
+            background: rgba(230,230,240,0.28);
+            top: 38%; height: 260px;
+            filter: blur(70px); opacity: 0.24;
+            animation: aurora3 16s ease-in-out infinite alternate;
+            animation-delay: -9s;
+          }
+          .aurora-band-4 {
+            background: rgba(215,215,230,0.32);
+            top: 55%; height: 180px;
+            filter: blur(70px); opacity: 0.20;
+            animation: aurora4 25s ease-in-out infinite alternate;
+            animation-delay: -3s;
+          }
+          .aurora-band-5 {
+            background: rgba(240,240,250,0.26);
+            top: 70%; height: 240px;
+            filter: blur(70px); opacity: 0.28;
+            animation: aurora5 20s ease-in-out infinite alternate;
+            animation-delay: -12s;
+          }
+
+          @keyframes aurora1 {
+            0%   { transform: translateX(-5%) translateY(0) scaleY(1); opacity: 0.13; }
+            33%  { transform: translateX(2%) translateY(-18px) scaleY(1.25); opacity: 0.17; }
+            66%  { transform: translateX(6%) translateY(8px) scaleY(0.9); opacity: 0.11; }
+            100% { transform: translateX(-3%) translateY(-10px) scaleY(1.1); opacity: 0.15; }
+          }
+          @keyframes aurora2 {
+            0%   { transform: translateX(3%) translateY(0) scaleY(1); opacity: 0.14; }
+            25%  { transform: translateX(-4%) translateY(-15px) scaleY(1.3); opacity: 0.18; }
+            50%  { transform: translateX(7%) translateY(12px) scaleY(0.85); opacity: 0.10; }
+            75%  { transform: translateX(-2%) translateY(-8px) scaleY(1.15); opacity: 0.16; }
+            100% { transform: translateX(5%) translateY(5px) scaleY(1.05); opacity: 0.13; }
+          }
+          @keyframes aurora3 {
+            0%   { transform: translateX(-3%) translateY(5px) scaleY(1); opacity: 0.16; }
+            33%  { transform: translateX(5%) translateY(-20px) scaleY(1.2); opacity: 0.12; }
+            66%  { transform: translateX(-6%) translateY(15px) scaleY(0.88); opacity: 0.18; }
+            100% { transform: translateX(8%) translateY(-5px) scaleY(1.08); opacity: 0.14; }
+          }
+          @keyframes aurora4 {
+            0%   { transform: translateX(4%) translateY(0) scaleY(1); opacity: 0.12; }
+            20%  { transform: translateX(-5%) translateY(-12px) scaleY(1.28); opacity: 0.16; }
+            50%  { transform: translateX(3%) translateY(10px) scaleY(0.9); opacity: 0.10; }
+            80%  { transform: translateX(-7%) translateY(-15px) scaleY(1.18); opacity: 0.15; }
+            100% { transform: translateX(2%) translateY(8px) scaleY(0.95); opacity: 0.13; }
+          }
+          @keyframes aurora5 {
+            0%   { transform: translateX(-4%) translateY(8px) scaleY(1); opacity: 0.18; }
+            25%  { transform: translateX(6%) translateY(-14px) scaleY(1.22); opacity: 0.13; }
+            50%  { transform: translateX(-2%) translateY(18px) scaleY(0.85); opacity: 0.17; }
+            75%  { transform: translateX(8%) translateY(-6px) scaleY(1.1); opacity: 0.11; }
+            100% { transform: translateX(-5%) translateY(10px) scaleY(1.05); opacity: 0.16; }
+          }
+
+          /* ── Aurora overlay gradient ──────────── */
+          .aurora-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+              to bottom,
+              rgba(0,0,0,0.5) 0%,
+              rgba(0,0,0,0.1) 40%,
+              rgba(0,0,0,0.1) 60%,
+              rgba(0,0,0,0.6) 100%
+            );
+            z-index: 1;
+            pointer-events: none;
+          }
+
+          /* ── Frosted glass problem cards ──────── */
+          .problem-card-aurora {
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 0.5px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 28px;
+            transition: background 0.3s ease, border-color 0.3s ease;
+          }
+          .problem-card-aurora:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: rgba(255,255,255,0.15);
+          }
+          .problem-card-aurora h3 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-style: italic;
+            font-weight: 400;
+            font-size: 1.15rem;
+            color: #fff;
+            margin: 0 0 12px;
+          }
+
+          /* ── Mobile perf ──────────────────────── */
+          @media (max-width: 768px) {
+            .aurora-band { filter: blur(50px); }
+            .aurora-band-1 { opacity: 0.10; }
+            .aurora-band-2 { opacity: 0.10; }
+            .aurora-band-3 { opacity: 0.11; }
+            .aurora-band-4 { opacity: 0.08; }
+            .aurora-band-5 { opacity: 0.13; }
+          }
+        `}} />
+
+        {/* Aurora bands */}
+        <div className="aurora-band aurora-band-1" />
+        <div className="aurora-band aurora-band-2" />
+        <div className="aurora-band aurora-band-3" />
+        <div className="aurora-band aurora-band-4" />
+        <div className="aurora-band aurora-band-5" />
+
+        {/* Edge-darkening overlay */}
+        <div className="aurora-overlay" />
+
+        {/* Content — z-index 2 */}
+        <div className="container" style={{ position: "relative", zIndex: 2 }}>
+          <AnimSection><p className="section-label" style={{ color: "rgba(255,255,255,0.45)" }}>THE PROBLEM</p></AnimSection>
+          <AnimSection delay={0.1}>
+            <h2 className="section-heading" style={{ maxWidth: 700, color: "#fff" }}>
+              Phishing attacks succeed <span className="serif-italic">because you can&apos;t see them coming.</span>
+            </h2>
+          </AnimSection>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginTop: 48 }}>
+            {PROBLEMS.map((p, i) => (
+              <AnimSection key={i} delay={0.15 + i * 0.1}>
+                <div className="problem-card-aurora">
+                  <h3>{p.title}</h3>
+                  <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.9rem", lineHeight: 1.7, margin: 0 }}>{p.desc}</p>
+                </div>
+              </AnimSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="section-divider" />
+
+      {/* ═══ HOW IT WORKS (Animated) ═══ */}
+      <HowItWorks />
+
+      <div className="section-divider" />
+
+      {/* ═══ CAPABILITIES (Animated) ═══ */}
+      <Capabilities />
+
+      <div className="section-divider" />
+
+      {/* ═══ CTA FOOTER ═══ */}
+      <section className="section" style={{ paddingBottom: 120 }}>
+        <div className="container" style={{ textAlign: "center" }}>
+          <AnimSection>
+            <h2 className="cta-heading" style={{ maxWidth: 1200, margin: "0 auto", paddingBottom: 20 }}>
+              Your inbox, protected<br />autonomously.
+            </h2>
+          </AnimSection>
+          <AnimSection delay={0.1}>
+            <p style={{ color: "var(--text-secondary)", fontSize: "1rem", maxWidth: 600, margin: "0 auto 36px", lineHeight: 1.7 }}>
+              Paste an email for instant forensic analysis. Connect your inbox for real-time protection. Cancel anytime.
+            </p>
+          </AnimSection>
+          <AnimSection delay={0.2}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+              <Link href="/scan" className="btn-primary" style={{ padding: "16px 32px", textDecoration: "none" }}>
+                Start scanning
+              </Link>
+              <a href="#how" className="btn-secondary" style={{ padding: "16px 32px" }}>Learn more</a>
+            </div>
+          </AnimSection>
+
+          {/* Footer bar */}
+          <div style={{ marginTop: 80, paddingTop: 32, borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span className="serif-italic" style={{ fontSize: "1rem" }}>Phish</span>
+              <span style={{ fontWeight: 700, fontSize: "1rem" }}>Filter</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Grok AI · VirusTotal · Firecrawl</span>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>© {new Date().getFullYear()}</span>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

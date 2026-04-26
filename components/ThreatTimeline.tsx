@@ -32,22 +32,22 @@ const MAX_ENTRIES = 10;
 
 const VERDICT_CONFIG = {
   HIGH_RISK: {
-    dot: "bg-red-500",
-    glow: "shadow-red-500/30",
+    dot: "bg-red-400",
+    glow: "shadow-red-400/30",
     label: "High Risk",
-    labelClass: "bg-red-500/15 text-red-400 border-red-500/20",
+    labelClass: "bg-red-500/10 text-red-400 border-red-500/15",
   },
   MEDIUM_RISK: {
-    dot: "bg-amber-500",
-    glow: "shadow-amber-500/30",
+    dot: "bg-amber-400",
+    glow: "shadow-amber-400/30",
     label: "Suspicious",
-    labelClass: "bg-amber-500/15 text-amber-400 border-amber-500/20",
+    labelClass: "bg-amber-500/10 text-amber-400 border-amber-500/15",
   },
   SAFE: {
-    dot: "bg-emerald-500",
-    glow: "shadow-emerald-500/30",
+    dot: "bg-emerald-400",
+    glow: "shadow-emerald-400/30",
     label: "Safe",
-    labelClass: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+    labelClass: "bg-emerald-500/10 text-emerald-400 border-emerald-500/15",
   },
 };
 
@@ -139,30 +139,32 @@ export default function ThreatTimeline({ onSelectReport }: ThreatTimelineProps) 
       {/* Toggle bar */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-3 px-5 py-3 rounded-xl border border-white/[0.06] bg-[#111111]
-                   hover:bg-white/[0.03] transition-colors text-left"
+        className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#161616]
+                   hover:bg-[#1c1c1c] transition-all duration-300 text-left"
       >
-        <svg className="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span className="text-sm font-medium text-white/60">Threat Timeline</span>
+        <div className="w-8 h-8 rounded-lg bg-[rgba(255,255,255,0.04)] flex items-center justify-center flex-shrink-0">
+          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <span className="text-sm font-serif font-semibold text-[#b3b3b3]">Threat Timeline</span>
 
         {/* Stats pills */}
-        <div className="flex items-center gap-1.5 ml-auto mr-2">
+        <div className="flex items-center gap-2 ml-auto mr-2">
           {stats.high > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-500/15 text-red-400">{stats.high}</span>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-500/10 text-red-400">{stats.high}</span>
           )}
           {stats.med > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/15 text-amber-400">{stats.med}</span>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400">{stats.med}</span>
           )}
           {stats.safe > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-400">{stats.safe}</span>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400">{stats.safe}</span>
           )}
         </div>
 
         <motion.svg
           animate={{ rotate: isOpen ? 180 : 0 }}
-          className="w-4 h-4 text-white/20"
+          className="w-4 h-4 text-[#666]"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -181,7 +183,7 @@ export default function ThreatTimeline({ onSelectReport }: ThreatTimelineProps) 
             transition={{ duration: 0.25 }}
             className="overflow-hidden"
           >
-            <div className="mt-2 rounded-xl border border-white/[0.06] bg-[#111111] divide-y divide-white/[0.04] overflow-hidden">
+            <div className="mt-2 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#161616] divide-y divide-white/[0.04] overflow-hidden">
               {entries.map((entry, i) => {
                 const config = VERDICT_CONFIG[entry.verdict] || VERDICT_CONFIG.SAFE;
                 return (
@@ -191,31 +193,31 @@ export default function ThreatTimeline({ onSelectReport }: ThreatTimelineProps) 
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.03 * i }}
                     onClick={() => onSelectReport(entry.reportData)}
-                    className="w-full px-5 py-3 flex items-center gap-3 text-left hover:bg-white/[0.02] transition-colors"
+                    className="w-full px-6 py-4 flex items-center gap-4 text-left hover:bg-[#1c1c1c] transition-all duration-300"
                   >
                     {/* Timeline dot + line */}
                     <div className="flex flex-col items-center flex-shrink-0">
                       <div className={`w-2.5 h-2.5 rounded-full ${config.dot} shadow-lg ${config.glow}`} />
                       {i < entries.length - 1 && (
-                        <div className="w-px h-full min-h-[20px] bg-white/[0.06] mt-1" />
+                        <div className="w-px h-full min-h-[20px] bg-white/[0.04] mt-1" />
                       )}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white/70 truncate">{entry.subject}</p>
-                      <p className="text-[11px] text-white/25 mt-0.5">
+                      <p className="text-sm text-[#b3b3b3] truncate">{entry.subject}</p>
+                      <p className="text-[11px] text-[#666] mt-1">
                         {entry.from} · {timeAgo(entry.timestamp)} · {entry.signalCount} signals
                       </p>
                     </div>
 
                     {/* Verdict badge */}
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border flex-shrink-0 ${config.labelClass}`}>
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold border flex-shrink-0 ${config.labelClass}`}>
                       {config.label}
                     </span>
 
                     {/* Score */}
-                    <span className="text-xs text-white/20 font-mono w-8 text-right flex-shrink-0">{entry.score}</span>
+                    <span className="text-xs text-[#666] font-mono w-8 text-right flex-shrink-0">{entry.score}</span>
                   </motion.button>
                 );
               })}

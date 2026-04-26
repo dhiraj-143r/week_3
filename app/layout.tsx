@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
-
-const inter = Inter({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700", "800"] });
 
 export const metadata: Metadata = {
   title: "PhishFilter — AI Phishing Detection",
@@ -23,15 +20,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} bg-background text-foreground min-h-screen`}>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <Toaster
           position="top-right"
           toastOptions={{
             style: {
-              background: "#111111",
-              color: "#ffffff",
-              border: "1px solid #1e1e1e",
+              background: "#161616",
+              color: "#f5f5f5",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "12px",
+              fontSize: "13px",
+              fontFamily: "'Inter', system-ui, sans-serif",
             },
           }}
         />
