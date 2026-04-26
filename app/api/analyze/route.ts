@@ -21,6 +21,8 @@ import { parseEmailHeaders } from "@/lib/parser";
 import { scrapeUrls } from "@/lib/firecrawl";
 import { scanUrlsVirusTotal, getIpsInfo, getScreenshot } from "@/lib/locus";
 import { analyzeEmail } from "@/lib/grok";
+import { sandboxScanUrls, LinkAnalysis } from "@/lib/sandbox";
+import { storeReport } from "@/lib/report-store";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -113,7 +115,7 @@ export async function POST(request: NextRequest) {
     // Firecrawl, VirusTotal, and IPinfo can all run simultaneously
     const enrichmentStart = Date.now();
 
-    const [firecrawlResults, virusTotalResults, ipInfoResults] = await Promise.all([
+    const [firecrawlResults, virusTotalResults, ipInfoResults, sandboxResults] = await Promise.all([
       // 3a. Firecrawl all extracted URLs
       safeRun(
         () => withTimeout(scrapeUrls(parsed.urls), 20000, "Firecrawl"),
@@ -134,13 +136,20 @@ export async function POST(request: NextRequest) {
         {},
         "IPinfo IP lookups"
       ),
+
+      // 3d. Sandbox scan all URLs (redirect chain + analysis)
+      safeRun(
+        () => withTimeout(sandboxScanUrls(parsed.urls), 25000, "Sandbox"),
+        [] as LinkAnalysis[],
+        "Sandbox URL scanning"
+      ),
     ]);
 
     timings.firecrawl = Date.now() - enrichmentStart;
     timings.virusTotal = Date.now() - enrichmentStart;
     timings.ipInfo = Date.now() - enrichmentStart;
 
-    console.log(`[Pipeline] Enrichment complete — FC: ${Object.keys(firecrawlResults).length} URLs, VT: ${Object.keys(virusTotalResults).length} URLs, IP: ${Object.keys(ipInfoResults).length} IPs`);
+    console.log(`[Pipeline] Enrichment complete — FC: ${Object.keys(firecrawlResults).length} URLs, VT: ${Object.keys(virusTotalResults).length} URLs, IP: ${Object.keys(ipInfoResults).length} IPs, Sandbox: ${sandboxResults.length} links`);
 
     // ── 4. Screenshot the first suspicious URL ─────────────────────
     const screenshotStart = Date.now();
@@ -216,6 +225,7 @@ export async function POST(request: NextRequest) {
           url: urlToScreenshot || null,
           screenshotUrl: screenshotUrl || null,
         },
+        sandbox: sandboxResults,
       },
       parsed: {
         from: parsed.from,
@@ -233,7 +243,15 @@ export async function POST(request: NextRequest) {
       timings,
     };
 
-    // ── 7. Fire notifications in background (non-blocking) ──────────
+    // ── 7. Store report for sharing ────────────────────────────────
+    const reportId = storeReport(report as unknown as Record<string, unknown>);
+    const shareUrl = `${request.nextUrl.origin}/report/${reportId}`;
+    console.log(`[Pipeline] Report stored — shareable at ${shareUrl}`);
+
+    // Add shareUrl to the report response
+    const reportWithShare = { ...report, reportId, shareUrl };
+
+    // ── 8. Fire notifications in background (non-blocking) ──────────
     if (body.userEmail || body.userPhone) {
       fetch(`${request.nextUrl.origin}/api/notify`, {
         method: "POST",
@@ -243,11 +261,12 @@ export async function POST(request: NextRequest) {
           userEmail: body.userEmail,
           userPhone: body.userPhone,
           verdict: grokResult.verdict,
+          shareUrl,
         }),
       }).catch((err) => console.error("[Pipeline] Notify fire-and-forget failed:", err));
     }
 
-    return NextResponse.json(report);
+    return NextResponse.json(reportWithShare);
   } catch (error: unknown) {
     const err = error as { message?: string };
     const totalTime = Date.now() - pipelineStart;

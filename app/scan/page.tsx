@@ -8,9 +8,10 @@ import Link from "next/link";
 import ScanPageStyles from "@/components/ScanPageStyles";
 import InboxScanner from "@/components/InboxScanner";
 import EmailWatchdog from "@/components/EmailWatchdog";
+import LinkSandbox from "@/components/LinkSandbox";
 
 export default function ScanPage() {
-  const [activeTab, setActiveTab] = useState<"paste" | "inbox" | "watchdog">("paste");
+  const [activeTab, setActiveTab] = useState<"paste" | "inbox" | "watchdog" | "sandbox">("paste");
   const [demoMode, setDemoMode] = useState(false);
   const [emailContent, setEmailContent] = useState("");
   const [charCount, setCharCount] = useState(0);
@@ -38,7 +39,7 @@ export default function ScanPage() {
   const currentCursor = useRef({ x: 0, y: 0 });
 
   // Tab change handler
-  const handleTabChange = (tab: "paste" | "inbox" | "watchdog") => {
+  const handleTabChange = (tab: "paste" | "inbox" | "watchdog" | "sandbox") => {
     setActiveTab(tab);
   };
 
@@ -291,6 +292,13 @@ export default function ScanPage() {
               <div className="btn-sub">Real-time monitoring</div>
             </div>
           </button>
+          <button className={`sidebar-btn ${activeTab === 'sandbox' ? 'active' : ''}`} onClick={() => handleTabChange('sandbox')}>
+            <span className="btn-icon">🔗</span>
+            <div className="btn-text">
+              <div className="btn-title">Link Sandbox</div>
+              <div className="btn-sub">Safe URL checker</div>
+            </div>
+          </button>
         </nav>
 
         {/* RIGHT CONTENT AREA */}
@@ -400,6 +408,15 @@ export default function ScanPage() {
                   <div className="w-full">
                     <EmailWatchdog />
                   </div>
+                </div>
+              </motion.div>
+            )}
+            
+            {/* PANEL 4: LINK SANDBOX — Safe URL Checker */}
+            {activeTab === 'sandbox' && (
+              <motion.div key="sandbox" className="panel-inbox-full" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12, transition: { duration: 0.2 } }} transition={{ duration: 0.25, delay: 0.15 }} style={{ overflow: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
+                <div className="pt-8 lg:pt-12">
+                  <LinkSandbox />
                 </div>
               </motion.div>
             )}
