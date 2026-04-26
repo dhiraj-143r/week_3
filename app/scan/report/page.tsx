@@ -31,7 +31,7 @@ export default function ReportPage() {
     window.addEventListener("resize", resize);
     const onMove = (e: MouseEvent) => { mouse.x = e.clientX; mouse.y = e.clientY; };
     window.addEventListener("mousemove", onMove);
-    const COUNT = 250;
+    const COUNT = 500;
     const particles = Array.from({ length: COUNT }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
@@ -100,7 +100,7 @@ export default function ReportPage() {
       <style dangerouslySetInnerHTML={{ __html: `
         body { background: #0a0a0a; margin: 0; font-family: system-ui, -apple-system, sans-serif; }
 
-        .particle-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; filter: blur(1px); opacity: 0.85; }
+        .particle-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; filter: blur(0px); opacity: 0.85; }
         .rpt-vignette { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 0; background: radial-gradient(ellipse at center, transparent 30%, #0a0a0a 100%); }
 
         .rpt-nav { height: 52px; background: rgba(10,10,10,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 0 48px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }

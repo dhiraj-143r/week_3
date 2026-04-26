@@ -37,7 +37,7 @@ export default function ScanLoadingPage() {
     resize();
     window.addEventListener("resize", resize);
 
-    const COUNT = 200;
+    const COUNT = 450;
     const particles = Array.from({ length: COUNT }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
@@ -167,7 +167,7 @@ export default function ScanLoadingPage() {
       <style dangerouslySetInnerHTML={{ __html: `
         body { margin: 0; background: #0a0a0a; overflow: hidden; }
 
-        .loader-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; filter: blur(1px); opacity: 0.7; }
+        .loader-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; filter: blur(0px); opacity: 0.7; }
         .loader-vignette { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 30%, #0a0a0a 100%); }
 
         .loader-page {

@@ -42,7 +42,7 @@ export default function Home() {
     window.addEventListener("resize", resize);
     const onMove = (e: MouseEvent) => { mouse.x = e.clientX; mouse.y = e.clientY; };
     window.addEventListener("mousemove", onMove);
-    const COUNT = 180;
+    const COUNT = 450;
     const particles = Array.from({ length: COUNT }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
@@ -81,8 +81,8 @@ export default function Home() {
 
   return (
     <main style={{ background: "var(--bg-primary)", minHeight: "100vh" }}>
-      {/* ═══ PARTICLE CANVAS ═══ */}
-      <canvas ref={canvasRef} style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", filter: "blur(1.5px)", opacity: 0.7 }} />
+      {/* Particle Field (Stars) */}
+      <canvas ref={canvasRef} style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", filter: "blur(0px)", opacity: 0.7 }} />
 
       {/* ═══ NAVBAR ═══ */}
       <nav className="nav">
@@ -119,7 +119,7 @@ export default function Home() {
             width: 100%;
             height: 100vh;
             min-height: 600px;
-            background: #0a0a0a;
+            background: #000000ff;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -139,58 +139,58 @@ export default function Home() {
           }
           .hero-blob-1 {
             width: 700px; height: 700px;
-            background: radial-gradient(circle, rgba(220,220,230,0.35), transparent 70%);
-            filter: blur(80px); opacity: 0.8;
+            background: radial-gradient(circle, rgba(140, 140, 145, 0.35), transparent 70%);
+            filter: blur(15px); opacity: 0.8;
             top: -15%; left: -10%;
-            animation: blobDrift1 10s ease-in-out infinite alternate;
+            animation: blobDrift1 5s ease-in-out infinite alternate;
           }
           .hero-blob-2 {
             width: 550px; height: 550px;
-            background: radial-gradient(circle, rgba(210,210,225,0.30), transparent 70%);
-            filter: blur(80px); opacity: 0.75;
+            background: radial-gradient(circle, rgba(72, 72, 74, 0.3), transparent 70%);
+            filter: blur(15px); opacity: 0.75;
             bottom: -10%; right: -8%;
-            animation: blobDrift2 13s ease-in-out infinite alternate;
-            animation-delay: -4s;
+            animation: blobDrift2 6s ease-in-out infinite alternate;
+            animation-delay: -2s;
           }
           .hero-blob-3 {
             width: 450px; height: 450px;
-            background: radial-gradient(circle, rgba(230,230,240,0.25), transparent 70%);
-            filter: blur(80px); opacity: 0.7;
+            background: radial-gradient(circle, rgba(72, 72, 74, 0.25), transparent 70%);
+            filter: blur(15px); opacity: 0.7;
             top: 30%; left: 35%;
-            animation: blobDrift3 9s ease-in-out infinite alternate;
-            animation-delay: -7s;
+            animation: blobDrift3 4s ease-in-out infinite alternate;
+            animation-delay: -3s;
           }
           .hero-blob-4 {
             width: 350px; height: 350px;
-            background: radial-gradient(circle, rgba(220,220,235,0.35), transparent 70%);
-            filter: blur(80px); opacity: 0.8;
+            background: radial-gradient(circle, rgba(62, 62, 64, 0.35), transparent 70%);
+            filter: blur(15px); opacity: 0.8;
             top: 5%; right: 10%;
-            animation: blobDrift4 15s ease-in-out infinite alternate;
-            animation-delay: -2s;
+            animation: blobDrift4 7s ease-in-out infinite alternate;
+            animation-delay: -1s;
           }
           .hero-blob-5 {
             width: 500px; height: 500px;
-            background: radial-gradient(circle, rgba(240,240,250,0.28), transparent 70%);
-            filter: blur(90px); opacity: 0.7;
+            background: radial-gradient(circle, rgba(68, 68, 70, 0.28), transparent 70%);
+            filter: blur(20px); opacity: 0.7;
             bottom: 15%; left: -5%;
-            animation: blobDrift5 12s ease-in-out infinite alternate;
-            animation-delay: -3s;
+            animation: blobDrift5 5s ease-in-out infinite alternate;
+            animation-delay: -1.5s;
           }
           .hero-blob-6 {
             width: 380px; height: 380px;
-            background: radial-gradient(circle, rgba(215,215,230,0.25), transparent 70%);
-            filter: blur(70px); opacity: 0.65;
+            background: radial-gradient(circle, rgba(64, 64, 65, 0.25), transparent 70%);
+            filter: blur(15px); opacity: 0.65;
             top: -5%; right: 30%;
-            animation: blobDrift6 11s ease-in-out infinite alternate;
-            animation-delay: -6s;
+            animation: blobDrift6 4.5s ease-in-out infinite alternate;
+            animation-delay: -3s;
           }
           .hero-blob-7 {
             width: 300px; height: 300px;
-            background: radial-gradient(circle, rgba(235,235,245,0.32), transparent 70%);
-            filter: blur(70px); opacity: 0.75;
+            background: radial-gradient(circle, rgba(62, 62, 64, 0.32), transparent 70%);
+            filter: blur(15px); opacity: 0.75;
             bottom: 5%; right: 25%;
-            animation: blobDrift7 14s ease-in-out infinite alternate;
-            animation-delay: -1s;
+            animation: blobDrift7 6s ease-in-out infinite alternate;
+            animation-delay: -0.5s;
           }
 
           @keyframes blobDrift1 {
@@ -303,14 +303,6 @@ export default function Home() {
           }
         `}} />
 
-        {/* Blobs */}
-        <div className="hero-blob hero-blob-1" />
-        <div className="hero-blob hero-blob-2" />
-        <div className="hero-blob hero-blob-3" />
-        <div className="hero-blob hero-blob-4" />
-        <div className="hero-blob hero-blob-5" />
-        <div className="hero-blob hero-blob-6" />
-        <div className="hero-blob hero-blob-7" />
 
         {/* Centered content */}
         <div style={{ position: "relative", zIndex: 2, textAlign: "center", maxWidth: 800, padding: "0 24px" }}>
@@ -359,7 +351,7 @@ export default function Home() {
               href="/scan"
               style={{
                 display: "inline-block",
-                background: "#fff", color: "#0a0a0a",
+                background: "#fff", color: "#000000ff",
                 borderRadius: 999, padding: "14px 32px",
                 fontSize: "1rem", fontWeight: 600,
                 textDecoration: "none", border: "none",
@@ -397,36 +389,36 @@ export default function Home() {
             z-index: 0;
           }
           .aurora-band-1 {
-            background: rgba(220,220,230,0.35);
+            background: rgba(0, 0, 0, 0.35);
             top: 5%; height: 220px;
-            filter: blur(70px); opacity: 0.25;
+            filter: blur(25px); opacity: 0.25;
             animation: aurora1 18s ease-in-out infinite alternate;
           }
           .aurora-band-2 {
-            background: rgba(210,210,225,0.30);
+            background: rgba(7, 7, 7, 0.3);
             top: 20%; height: 200px;
-            filter: blur(70px); opacity: 0.22;
+            filter: blur(25px); opacity: 0.22;
             animation: aurora2 22s ease-in-out infinite alternate;
             animation-delay: -5s;
           }
           .aurora-band-3 {
-            background: rgba(230,230,240,0.28);
+            background: rgba(0, 0, 0, 0.28);
             top: 38%; height: 260px;
-            filter: blur(70px); opacity: 0.24;
+            filter: blur(25px); opacity: 0.24;
             animation: aurora3 16s ease-in-out infinite alternate;
             animation-delay: -9s;
           }
           .aurora-band-4 {
             background: rgba(215,215,230,0.32);
             top: 55%; height: 180px;
-            filter: blur(70px); opacity: 0.20;
+            filter: blur(25px); opacity: 0.20;
             animation: aurora4 25s ease-in-out infinite alternate;
             animation-delay: -3s;
           }
           .aurora-band-5 {
             background: rgba(240,240,250,0.26);
             top: 70%; height: 240px;
-            filter: blur(70px); opacity: 0.28;
+            filter: blur(25px); opacity: 0.28;
             animation: aurora5 20s ease-in-out infinite alternate;
             animation-delay: -12s;
           }
@@ -505,7 +497,7 @@ export default function Home() {
 
           /* ── Mobile perf ──────────────────────── */
           @media (max-width: 768px) {
-            .aurora-band { filter: blur(50px); }
+            .aurora-band { filter: blur(20px); }
             .aurora-band-1 { opacity: 0.10; }
             .aurora-band-2 { opacity: 0.10; }
             .aurora-band-3 { opacity: 0.11; }

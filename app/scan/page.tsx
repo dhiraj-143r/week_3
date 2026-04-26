@@ -156,7 +156,7 @@ export default function ScanPage() {
     window.addEventListener("resize", resize);
     const onMove = (e: MouseEvent) => { mouse.x = e.clientX; mouse.y = e.clientY; };
     window.addEventListener("mousemove", onMove);
-    const COUNT = 160;
+    const COUNT = 400;
     const particles = Array.from({ length: COUNT }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
@@ -197,8 +197,7 @@ export default function ScanPage() {
     <div className="scan-layout page-booting" suppressHydrationWarning>
       <ScanPageStyles />
 
-      {/* ═══ PARTICLE CANVAS ═══ */}
-      <canvas ref={canvasRef} style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", filter: "blur(2px)", opacity: 0.8 }} />
+      <canvas ref={canvasRef} style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", filter: "blur(0px)", opacity: 0.8 }} />
 
       {/* ═══ AMBIENT EFFECTS ═══ */}
       <div className="scanline-overlay"></div>
