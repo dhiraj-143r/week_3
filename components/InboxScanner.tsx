@@ -308,7 +308,8 @@ export default function InboxScanner({ onSelectEmail }: InboxScannerProps) {
               onClick={handleScan}
               disabled={!email || !password || isScanning}
               className="px-6 py-2.5 rounded-xl text-sm font-medium
-                         bg-accent text-white hover:bg-[rgba(255,255,255,0.04)]0
+                         bg-gradient-to-r from-indigo-600 to-violet-600 text-white
+                         hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-500/20
                          transition-all disabled:opacity-30 flex items-center gap-2"
             >
               {isScanning ? (
