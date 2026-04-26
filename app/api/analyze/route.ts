@@ -22,7 +22,6 @@ import { scrapeUrls } from "@/lib/firecrawl";
 import { scanUrlsVirusTotal, getIpsInfo, getScreenshot } from "@/lib/locus";
 import { analyzeEmail } from "@/lib/grok";
 import { sandboxScanUrls, LinkAnalysis } from "@/lib/sandbox";
-import { storeReport } from "@/lib/report-store";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -243,15 +242,7 @@ export async function POST(request: NextRequest) {
       timings,
     };
 
-    // ── 7. Store report for sharing ────────────────────────────────
-    const reportId = storeReport(report as unknown as Record<string, unknown>);
-    const shareUrl = `${request.nextUrl.origin}/report/${reportId}`;
-    console.log(`[Pipeline] Report stored — shareable at ${shareUrl}`);
-
-    // Add shareUrl to the report response
-    const reportWithShare = { ...report, reportId, shareUrl };
-
-    // ── 8. Fire notifications in background (non-blocking) ──────────
+    // ── 7. Fire notifications in background (non-blocking) ──────────
     if (body.userEmail || body.userPhone) {
       fetch(`${request.nextUrl.origin}/api/notify`, {
         method: "POST",
@@ -261,12 +252,11 @@ export async function POST(request: NextRequest) {
           userEmail: body.userEmail,
           userPhone: body.userPhone,
           verdict: grokResult.verdict,
-          shareUrl,
         }),
       }).catch((err) => console.error("[Pipeline] Notify fire-and-forget failed:", err));
     }
 
-    return NextResponse.json(reportWithShare);
+    return NextResponse.json(report);
   } catch (error: unknown) {
     const err = error as { message?: string };
     const totalTime = Date.now() - pipelineStart;

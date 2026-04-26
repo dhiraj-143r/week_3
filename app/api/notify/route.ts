@@ -47,7 +47,6 @@ interface NotifyRequest {
   userEmail?: string;
   userPhone?: string;
   verdict: "HIGH_RISK" | "MEDIUM_RISK" | "SAFE";
-  shareUrl?: string;
 }
 
 // ── Verdict Config ─────────────────────────────────────────────────────
@@ -293,8 +292,7 @@ const TWILIO_WA_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER;
 
 async function sendWhatsAppAlert(
   userPhone: string,
-  report: NotifyRequest["report"],
-  shareUrl?: string
+  report: NotifyRequest["report"]
 ): Promise<boolean> {
   if (!userPhone || !TWILIO_SID || !TWILIO_TOKEN || !TWILIO_WA_NUMBER) return false;
 
@@ -308,8 +306,6 @@ async function sendWhatsAppAlert(
     .map((s) => `${s.status === "FAIL" ? "✗" : "⚠"} ${s.check}: ${s.detail}`)
     .join("\n");
 
-  const reportLink = shareUrl || APP_URL;
-
   const message = `${config.emoji} *PhishFilter Alert*
 
 *Verdict:* ${config.label}
@@ -319,9 +315,6 @@ async function sendWhatsAppAlert(
 ${topSignals || "No critical signals detected"}
 
 ${analysis.summary}
-
-📄 *View Full Forensic Report:*
-${reportLink}
 
 Stay safe 🛡️`;
 
@@ -362,7 +355,7 @@ Stay safe 🛡️`;
 export async function POST(request: NextRequest) {
   try {
     const body: NotifyRequest = await request.json();
-    const { report, userEmail, userPhone, shareUrl } = body;
+    const { report, userEmail, userPhone } = body;
 
     if (!report) {
       return NextResponse.json({ error: "Report data is required" }, { status: 400 });
@@ -371,7 +364,7 @@ export async function POST(request: NextRequest) {
     // Run both notifications in parallel — each fails silently
     const [emailSent, whatsappSent] = await Promise.all([
       userEmail ? sendEmailReport(userEmail, report) : Promise.resolve(false),
-      userPhone ? sendWhatsAppAlert(userPhone, report, shareUrl) : Promise.resolve(false),
+      userPhone ? sendWhatsAppAlert(userPhone, report) : Promise.resolve(false),
     ]);
 
     return NextResponse.json({
