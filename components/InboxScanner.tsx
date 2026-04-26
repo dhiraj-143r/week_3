@@ -309,7 +309,8 @@ export default function InboxScanner({ onSelectEmail }: InboxScannerProps) {
               disabled={!email || !password || isScanning}
               className="px-6 py-2.5 rounded-xl text-sm font-medium
                          bg-gradient-to-r from-indigo-600 to-violet-600 text-white
-                         hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-500/20
+                         hover:from-indigo-500 hover:to-violet-500
+                         shadow-lg shadow-indigo-500/20
                          transition-all disabled:opacity-30 flex items-center gap-2"
             >
               {isScanning ? (
@@ -431,8 +432,8 @@ export default function InboxScanner({ onSelectEmail }: InboxScannerProps) {
           <button
             onClick={fetchInboxSummary}
             disabled={summaryLoading || !email || !password}
-            className="ml-auto px-5 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-500 to-green-600
-                       text-white hover:from-emerald-400 hover:to-green-500 shadow-lg shadow-emerald-500/20
+            className="ml-auto px-5 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-emerald-600 to-green-600
+                       text-white hover:from-emerald-500 hover:to-green-500 shadow-lg shadow-emerald-500/20
                        disabled:opacity-30 transition-all flex items-center gap-2"
           >
             {summaryLoading ? (
@@ -445,7 +446,7 @@ export default function InboxScanner({ onSelectEmail }: InboxScannerProps) {
 
         {summaryLoading && (
           <div className="flex items-center gap-2 mb-3">
-            <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-xs text-[#666]">Scanning last {summaryDays} day{summaryDays > 1 ? "s" : ""}...</span>
           </div>
         )}
@@ -637,9 +638,9 @@ export default function InboxScanner({ onSelectEmail }: InboxScannerProps) {
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center"
+                  className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center"
                 >
-                  <span className="text-accent text-xl">🔍</span>
+                  <span className="text-indigo-400 text-xl">🔍</span>
                 </motion.div>
               </motion.div>
               <h3 className="text-lg font-medium text-[#f5f5f5] mb-2">Report Preview</h3>

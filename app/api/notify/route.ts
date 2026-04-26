@@ -321,13 +321,18 @@ Stay safe 🛡️`;
   // Format phone number for Twilio WhatsApp
   let formattedPhone = userPhone.replace(/\s+/g, "").replace(/-/g, "");
   if (!formattedPhone.startsWith("+")) {
-    // Assume Indian number if no country code
     formattedPhone = formattedPhone.startsWith("91") ? `+${formattedPhone}` : `+91${formattedPhone}`;
   }
 
-  try {
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`;
+  const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`;
+  const authConfig = {
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    auth: { username: TWILIO_SID, password: TWILIO_TOKEN },
+    timeout: 10000,
+  };
 
+  try {
+    // Try free-form message first (works if user replied within 24h)
     await axios.post(
       twilioUrl,
       new URLSearchParams({
@@ -335,16 +340,43 @@ Stay safe 🛡️`;
         To: `whatsapp:${formattedPhone}`,
         Body: message,
       }).toString(),
-      {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        auth: { username: TWILIO_SID, password: TWILIO_TOKEN },
-        timeout: 10000,
-      }
+      authConfig
     );
-    console.log(`[Notify] WhatsApp sent to ${formattedPhone} via Twilio`);
+    console.log(`[Notify] WhatsApp sent to ${formattedPhone} via Twilio (free-form)`);
     return true;
   } catch (error: unknown) {
-    const err = error as { message?: string; response?: { data?: unknown } };
+    const err = error as { message?: string; response?: { data?: { code?: number } } };
+    const twilioCode = err.response?.data?.code;
+
+    // 63016 = free-form not allowed, need template. Try content template fallback.
+    if (twilioCode === 63016 || twilioCode === 63032) {
+      console.log(`[Notify] Free-form blocked (${twilioCode}), trying content template...`);
+      try {
+        // Use the pre-approved Appointment Reminders template as a fallback
+        // This sends a basic template message to initiate the conversation
+        const contentSid = process.env.TWILIO_CONTENT_SID || "HXb5b62575e6e4ff6129ad7c8efe1f983e";
+        await axios.post(
+          twilioUrl,
+          new URLSearchParams({
+            From: `whatsapp:${TWILIO_WA_NUMBER}`,
+            To: `whatsapp:${formattedPhone}`,
+            ContentSid: contentSid,
+            ContentVariables: JSON.stringify({
+              "1": `${config.label} (Score: ${analysis.overallScore}/100)`,
+              "2": "now",
+            }),
+          }).toString(),
+          authConfig
+        );
+        console.log(`[Notify] WhatsApp sent to ${formattedPhone} via Twilio (template)`);
+        return true;
+      } catch (templateErr: unknown) {
+        const tErr = templateErr as { message?: string; response?: { data?: unknown } };
+        console.error(`[Notify] Template fallback also failed:`, tErr.message, tErr.response?.data);
+        return false;
+      }
+    }
+
     console.error(`[Notify] WhatsApp send failed:`, err.message, err.response?.data);
     return false;
   }
