@@ -77,36 +77,13 @@ export default function ScanPage() {
     }
     
     setIsScanning(true);
+    document.body.style.overflow = "auto";
+
+    // Store the email content so the loading page can fire the API call
+    sessionStorage.setItem("phishfilter_email_to_scan", emailContent);
     
-    const scanToast = toast.loading("Analyzing email — this may take up to 30 seconds...");
-
-    try {
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailContent }),
-      });
-      
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Analysis failed");
-      }
-
-      // Store in sessionStorage and navigate to report page
-      sessionStorage.setItem("phishfilter_report", JSON.stringify(data));
-      toast.success("Analysis complete! Redirecting...", { id: scanToast });
-      
-      document.body.style.overflow = "auto";
-      
-      setTimeout(() => {
-        window.location.href = "/scan/report";
-      }, 500);
-    } catch (err: any) {
-      console.error("[Scan] Error:", err);
-      toast.error(err.message || "Scan failed. Please try again.", { id: scanToast });
-      setIsScanning(false);
-    }
+    // Navigate to the loading page
+    window.location.href = "/scan/loading";
   };
 
   useEffect(() => {
