@@ -93,8 +93,8 @@ export default function ScanPageStyles() {
       .scan-live-dot.demo { background: #eab308; }
 
       /* ═══ ZONE 2: HEADER ═══ */
-      .scan-header { padding: 28px 220px 20px; flex-shrink: 0; position: relative; z-index: 2; border-bottom: 1px solid rgba(255,255,255,0.06); }
-      .scan-back { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: rgba(255,255,255,0.3); text-decoration: none; margin-bottom: 16px; transition: 0.2s; }
+      .scan-header { padding: 28px 80px 20px; flex-shrink: 0; position: relative; z-index: 2; border-bottom: none; display: flex; flex-direction: column; align-items: center; text-align: center; }
+      .scan-back { position: absolute; left: 80px; top: 28px; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: rgba(255,255,255,0.3); text-decoration: none; margin-bottom: 16px; transition: 0.2s; }
       .scan-back .arrow { transition: transform 0.2s ease; }
       .scan-back:hover { color: rgba(255,255,255,0.65); }
       .scan-back:hover .arrow { transform: translateX(-4px); }
@@ -108,15 +108,15 @@ export default function ScanPageStyles() {
       .scan-subtitle { font-size: 14px; color: rgba(255,255,255,0.4); margin: 8px 0 0 0; line-height: 1.5; }
 
       /* ═══ ZONE 3: MAIN PANEL ═══ */
-      .scan-main-panel { flex: 1; overflow: hidden; display: flex; z-index: 2; position: relative; padding: 0 220px; }
+      .scan-main-panel { flex: 1; overflow: hidden; display: flex; flex-direction: column; align-items: center; z-index: 2; position: relative; padding: 0 80px; }
 
-      /* ── Left Sidebar ── */
-      .scan-sidebar { width: 280px; flex-shrink: 0; background: rgba(255,255,255,0.02); border-right: 1px solid rgba(255,255,255,0.06); padding: 24px 20px; display: flex; flex-direction: column; gap: 8px; }
-      .sidebar-label { font-size: 10px; letter-spacing: 0.15em; color: rgba(255,255,255,0.25); margin-bottom: 8px; font-weight: 600; }
+      /* ── Tabs (formerly Sidebar) ── */
+      .scan-tabs { display: flex; flex-direction: row; justify-content: center; gap: 16px; width: 100%; max-width: 100%; padding: 12px 0 24px 0; }
+      .sidebar-label { display: none; }
       .sidebar-btn {
-        width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid transparent;
-        background: transparent; color: rgba(255,255,255,0.45); cursor: pointer; text-align: left;
-        display: flex; align-items: center; gap: 12px; transition: all 0.2s ease;
+        flex: 1; max-width: 280px; padding: 14px 16px; border-radius: 12px; border: 1px solid transparent;
+        background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.45); cursor: pointer; text-align: left;
+        display: flex; align-items: center; justify-content: center; gap: 12px; transition: all 0.2s ease;
         border-color: rgba(255,255,255,0.06); position: relative; overflow: hidden;
       }
       .sidebar-btn::after {
@@ -171,7 +171,7 @@ export default function ScanPageStyles() {
       .tag-pill:hover { border-color: rgba(220,220,230,0.4); background: rgba(220,220,230,0.06); transform: translateY(-2px); }
 
       /* ── Right Content Area ── */
-      .scan-content-area { flex: 1; padding: 24px 40px; display: flex; flex-direction: column; overflow: hidden; }
+      .scan-content-area { flex: 1; padding: 0 0 40px 0; display: flex; flex-direction: column; overflow-y: auto; width: 100%; max-width: 1100px; margin: 0 auto; }
       .panel-paste, .panel-placeholder { height: 100%; display: flex; flex-direction: column; }
       
       .panel-placeholder { align-items: center; justify-content: center; text-align: center; }
@@ -345,17 +345,23 @@ export default function ScanPageStyles() {
       @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
 
       /* ═══ RESPONSIVE ═══ */
+      @media (max-width: 1024px) {
+        .scan-header { padding: 20px 40px; }
+        .scan-back { left: 40px; top: 20px; }
+        .scan-main-panel { padding: 0 40px; }
+      }
       @media (max-width: 768px) {
         html, body { overflow: auto; height: auto; }
         .scan-layout { height: auto; display: block; overflow: auto; }
         .circuit-bg { opacity: 0.04; }
-        .scan-header { padding: 20px 24px; }
+        .scan-header { padding: 20px 24px; align-items: flex-start; text-align: left; }
+        .scan-back { position: relative; left: 0; top: 0; }
         .scan-navbar { padding: 0 24px; }
-        .scan-main-panel { flex-direction: column; padding: 0 24px; }
-        .scan-sidebar { width: 100%; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 16px 24px; flex-direction: row; overflow-x: auto; white-space: nowrap; gap: 12px; }
-        .sidebar-label, .sidebar-btn .btn-sub, .sidebar-tags { display: none; }
-        .sidebar-btn { width: auto; flex-shrink: 0; padding: 10px 16px; }
-        .scan-content-area { padding: 24px; }
+        .scan-main-panel { flex-direction: column; padding: 0 24px; align-items: stretch; }
+        .scan-tabs { flex-direction: row; overflow-x: auto; white-space: nowrap; gap: 12px; justify-content: flex-start; padding: 16px 0; }
+        .sidebar-btn { width: auto; flex-shrink: 0; padding: 10px 16px; flex: none; }
+        .sidebar-btn .btn-sub { display: none; }
+        .scan-content-area { padding: 24px 0; }
         .paste-card { height: 500px; }
         .paste-header-left .sub { display: none; }
       }

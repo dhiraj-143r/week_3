@@ -78,6 +78,11 @@ export default function InboxScanner({ onSelectEmail }: InboxScannerProps) {
   const [scanProgress, setScanProgress] = useState(0);
   const [expandedUid, setExpandedUid] = useState<number | null>(null);
 
+  // Notification states
+  const [notify, setNotify] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifyPhone, setNotifyPhone] = useState("");
+
   // Summary state
   const [summaryDays, setSummaryDays] = useState(2);
   const [summaryLoading, setSummaryLoading] = useState(false);
@@ -160,6 +165,38 @@ export default function InboxScanner({ onSelectEmail }: InboxScannerProps) {
         setResults(data.results);
         setSummary(data.summary);
         setScanProgress(100);
+
+        // Send notifications if enabled
+        if (notify && (notifyPhone || notifyEmail)) {
+          for (const result of data.results) {
+            try {
+              await fetch("/api/notify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  report: {
+                    analysis: {
+                      verdict: result.verdict,
+                      score: result.score,
+                      summary: result.summary,
+                      signals: result.topSignals?.map((s: any) => ({ 
+                        category: s.check, 
+                        status: s.status, 
+                        description: s.detail 
+                      })) || []
+                    },
+                    urlAnalysis: [] // Add this if you parse URLs later
+                  },
+                  email: result.subject,
+                  notifyPhone: notifyPhone.trim(),
+                  notifyEmail: notifyEmail.trim()
+                })
+              });
+            } catch (err) {
+              console.error("Failed to send notification for:", result.subject);
+            }
+          }
+        }
       } else {
         setConnectionStatus("error");
         setConnectionMessage(data.error || "Scan failed");
@@ -171,15 +208,17 @@ export default function InboxScanner({ onSelectEmail }: InboxScannerProps) {
       clearInterval(progressInterval);
       setIsScanning(false);
     }
-  }, [email, password, provider, emailCount]);
+  }, [email, password, provider, emailCount, notify, notifyEmail, notifyPhone]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-full mx-auto grid grid-cols-1 lg:grid-cols-[11fr_9fr] gap-6 items-stretch">
+      {/* ── Left Column ── */}
+      <div className="space-y-6 flex flex-col min-w-0">
       {/* ── Connection Form ──────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#161616] p-6 sm:p-8"
+        className="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#161616] p-8 sm:p-10 min-h-[340px] flex flex-col justify-center"
       >
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-[rgba(255,255,255,0.05)] flex items-center justify-center">
@@ -193,22 +232,6 @@ export default function InboxScanner({ onSelectEmail }: InboxScannerProps) {
           </div>
         </div>
 
-        {/* Provider Selection */}
-        <div className="flex gap-2 mb-5">
-          {(["gmail", "outlook", "yahoo"] as const).map((p) => (
-            <button
-              key={p}
-              onClick={() => setProvider(p)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize
-                ${provider === p
-                  ? "bg-[rgba(255,255,255,0.08)] text-white border border-[rgba(255,255,255,0.15)]"
-                  : "bg-white/[0.02] text-[#a3a3a3] border border-[rgba(255,255,255,0.08)] hover:bg-white/[0.03]"
-                }`}
-            >
-              {p === "gmail" ? "📧 Gmail" : p === "outlook" ? "📬 Outlook" : "📩 Yahoo"}
-            </button>
-          ))}
-        </div>
 
         {/* Credentials */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -303,6 +326,35 @@ export default function InboxScanner({ onSelectEmail }: InboxScannerProps) {
           </div>
         </div>
 
+        {/* Get Notified Section */}
+        <div className={`mt-4 rounded-xl border transition-colors ${notify ? 'bg-[rgba(34,197,94,0.04)] border-[rgba(34,197,94,0.2)]' : 'bg-transparent border-[rgba(255,255,255,0.06)]'}`}>
+          <div className="px-4 py-3 flex justify-between items-center cursor-pointer" onClick={() => setNotify(!notify)}>
+            <div className="flex items-center gap-2 text-sm text-[#a3a3a3]">
+              <span className={notify ? 'animate-bounce' : ''}>🔔</span> Optional: Get notified about results
+            </div>
+            <div className={`w-9 h-5 rounded-full relative transition-colors ${notify ? 'bg-emerald-500/50' : 'bg-white/10'}`}>
+              <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform ${notify ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
+            </div>
+          </div>
+          
+          <AnimatePresence>
+            {notify && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="px-4 pb-4 flex gap-3">
+                  <input type="email" placeholder="Email Address" className="flex-1 bg-black/20 border border-white/5 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition-colors" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} />
+                  <input type="tel" placeholder="Phone Number (WhatsApp)" className="flex-1 bg-black/20 border border-white/5 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/20 transition-colors" value={notifyPhone} onChange={(e) => setNotifyPhone(e.target.value)} />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         {/* Connection Status */}
         <AnimatePresence>
           {connectionStatus !== "idle" && (
@@ -340,6 +392,262 @@ export default function InboxScanner({ onSelectEmail }: InboxScannerProps) {
         )}
       </motion.div>
 
+
+      {/* ── Inbox Summary ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#161616] p-6 sm:p-8 min-h-[260px]"
+      >
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-xl bg-[rgba(255,255,255,0.05)] flex items-center justify-center">
+            <span className="text-lg">📊</span>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-[#f5f5f5]">Inbox Summary</h3>
+            <p className="text-sm text-[#a3a3a3]">AI-powered threat overview of your recent emails</p>
+          </div>
+        </div>
+
+        {/* Day Range Selector */}
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <span className="text-[10px] text-[#666] uppercase tracking-wider mr-1">Last</span>
+          {DAY_OPTIONS.map((d) => (
+            <button
+              key={d}
+              onClick={() => setSummaryDays(d)}
+              disabled={summaryLoading}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+                ${summaryDays === d
+                  ? "bg-[rgba(255,255,255,0.08)] text-white border border-[rgba(255,255,255,0.15)]"
+                  : "bg-white/[0.02] text-[#a3a3a3] border border-[rgba(255,255,255,0.08)] hover:bg-white/[0.03]"
+                } disabled:opacity-50`}
+            >
+              {d} {d === 1 ? "day" : "days"}
+            </button>
+          ))}
+          <button
+            onClick={fetchInboxSummary}
+            disabled={summaryLoading || !email || !password}
+            className="ml-auto px-5 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-accent to-safe
+                       text-white hover:from-accent/90 hover:to-safe/90 shadow-lg shadow-accent/15
+                       disabled:opacity-30 transition-all flex items-center gap-2"
+          >
+            {summaryLoading ? (
+              <><span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Analyzing...</>
+            ) : (
+              <>📊 Get Summary</>
+            )}
+          </button>
+        </div>
+
+        {summaryLoading && (
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+            <span className="text-xs text-[#666]">Scanning last {summaryDays} day{summaryDays > 1 ? "s" : ""}...</span>
+          </div>
+        )}
+
+        {summaryError && (
+          <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400 mb-3">
+            ❌ {summaryError}
+          </div>
+        )}
+
+        {/* Summary Results */}
+        {inboxSummary && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)] p-4 text-center">
+                <p className="text-2xl font-bold text-[#f5f5f5]">{inboxSummary.totalEmails}</p>
+                <p className="text-[10px] text-[#666] uppercase tracking-wider mt-1">Emails Analyzed</p>
+              </div>
+              <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4 text-center">
+                <p className="text-2xl font-bold text-emerald-400">{inboxSummary.stats.safe}</p>
+                <p className="text-[10px] text-emerald-400/50 uppercase tracking-wider mt-1">Safe</p>
+              </div>
+              <div className="rounded-xl bg-amber-500/5 border border-amber-500/10 p-4 text-center">
+                <p className="text-2xl font-bold text-amber-400">{inboxSummary.stats.suspicious}</p>
+                <p className="text-[10px] text-amber-400/50 uppercase tracking-wider mt-1">Suspicious</p>
+              </div>
+              <div className="rounded-xl bg-red-500/5 border border-red-500/10 p-4 text-center">
+                <p className="text-2xl font-bold text-red-400">{inboxSummary.stats.highRisk}</p>
+                <p className="text-[10px] text-red-400/50 uppercase tracking-wider mt-1">High Risk</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)] p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-[#a3a3a3]">Average Risk Score</span>
+                <span className={`text-sm font-bold ${
+                  inboxSummary.stats.avgScore > 60 ? "text-red-400" :
+                  inboxSummary.stats.avgScore > 30 ? "text-amber-400" : "text-emerald-400"
+                }`}>{inboxSummary.stats.avgScore}/100</span>
+              </div>
+              <div className="h-2 rounded-full bg-white/[0.03] overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${inboxSummary.stats.avgScore}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className={`h-full rounded-full ${
+                    inboxSummary.stats.avgScore > 60 ? "bg-red-500" :
+                    inboxSummary.stats.avgScore > 30 ? "bg-amber-500" : "bg-emerald-500"
+                  }`}
+                />
+              </div>
+            </div>
+
+            {inboxSummary.timeline.length > 1 && (
+              <div className="rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)] p-4">
+                <h4 className="text-xs text-[#666] uppercase tracking-wider mb-3">Daily Breakdown</h4>
+                <div className="flex items-end gap-1 h-20">
+                  {inboxSummary.timeline.map((day, i) => {
+                    const maxTotal = Math.max(...inboxSummary.timeline.map((d) => d.total));
+                    const height = maxTotal > 0 ? (day.total / maxTotal) * 100 : 0;
+                    const riskyRatio = day.total > 0 ? day.risky / day.total : 0;
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                        <div className="w-full flex flex-col justify-end" style={{ height: "60px" }}>
+                          <div
+                            className={`w-full rounded-t-sm transition-all ${
+                              riskyRatio > 0.5 ? "bg-red-500/40" : riskyRatio > 0 ? "bg-amber-500/30" : "bg-emerald-500/30"
+                            }`}
+                            style={{ height: `${height}%`, minHeight: day.total > 0 ? "4px" : "0" }}
+                          />
+                        </div>
+                        <span className="text-[8px] text-[#666] truncate w-full text-center">
+                          {day.date.split("/").slice(0, 2).join("/")}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {inboxSummary.topSenders.length > 0 && (
+              <div className="rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)] p-4">
+                <h4 className="text-xs text-[#666] uppercase tracking-wider mb-3">Top Senders</h4>
+                <div className="space-y-2">
+                  {inboxSummary.topSenders.map((s, i) => (
+                    <div key={i} className="flex items-center justify-between py-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                          s.maxScore > 60 ? "bg-red-500/20 text-red-400" :
+                          s.maxScore > 30 ? "bg-amber-500/20 text-amber-400" : "bg-emerald-500/20 text-emerald-400"
+                        }`}>{i + 1}</span>
+                        <span className="text-xs text-[#a3a3a3] truncate">{s.address}</span>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="text-[10px] text-[#666]">{s.count} email{s.count > 1 ? "s" : ""}</span>
+                        <span className={`text-[10px] font-medium ${
+                          s.maxScore > 60 ? "text-red-400" : s.maxScore > 30 ? "text-amber-400" : "text-emerald-400"
+                        }`}>Score: {s.maxScore}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)] p-4">
+              <h4 className="text-xs text-[#666] uppercase tracking-wider mb-3">
+                All Emails — Sorted by Risk
+              </h4>
+              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                {inboxSummary.emails.map((em, i) => {
+                  const style = VERDICT_STYLES[em.verdict] || VERDICT_STYLES.SAFE;
+                  return (
+                    <motion.div
+                      key={em.uid}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.02 }}
+                      className={`rounded-lg border p-3 ${style.bg} border-[rgba(255,255,255,0.08)]`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="text-sm mt-0.5">{style.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-[#b3b3b3] font-medium truncate">{em.subject}</p>
+                          <p className="text-[10px] text-white/25 mt-0.5">
+                            {em.from.match(/<(.+?)>/)?.[1] || em.from} · {new Date(em.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${style.bg} ${style.text}`}>
+                            {em.score}
+                          </span>
+                          <span className={`px-1.5 py-0.5 rounded-full text-[8px] ${style.bg} ${style.text}`}>
+                            {style.label}
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </motion.div>
+
+      </div>
+
+      {/* ── Right Column: Report Document ── */}
+      <div className="flex flex-col min-w-0">
+
+        {!summary && results.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex-1 flex flex-col rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#161616] overflow-hidden shadow-2xl relative"
+          >
+            {/* ── Mac Window Header ── */}
+            <div className="h-12 bg-[#1c1c1e] border-b border-[rgba(255,255,255,0.05)] flex items-center px-4 relative">
+              {/* Window Controls */}
+              <div className="flex items-center gap-2 absolute left-4">
+                <div className="w-3 h-3 rounded-full bg-[#ff5f56] border border-[#e0443e]" />
+                <div className="w-3 h-3 rounded-full bg-[#ffbd2e] border border-[#dea123]" />
+                <div className="w-3 h-3 rounded-full bg-[#27c93f] border border-[#1aab29]" />
+              </div>
+              
+              
+            </div>
+
+            {/* ── Content Area ── */}
+            <div className="flex-1 flex flex-col items-center justify-center p-12 bg-gradient-to-b from-[#161616] to-[#0f0f10]">
+              <motion.div
+                animate={{ 
+                  y: [0, -10, 0],
+                  rotateZ: [0, -2, 2, 0]
+                }}
+                transition={{ 
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="w-24 h-32 rounded-xl bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] shadow-xl relative mb-6 flex items-center justify-center"
+              >
+                <div className="absolute top-4 left-4 right-4 h-2 bg-white/[0.05] rounded-full" />
+                <div className="absolute top-8 left-4 right-8 h-2 bg-white/[0.05] rounded-full" />
+                <div className="absolute top-12 left-4 right-12 h-2 bg-white/[0.05] rounded-full" />
+                
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center"
+                >
+                  <span className="text-accent text-xl">🔍</span>
+                </motion.div>
+              </motion.div>
+              <h3 className="text-lg font-medium text-[#f5f5f5] mb-2">Report Preview</h3>
+              <p className="text-sm text-[#a3a3a3] text-center max-w-xs">
+                Scan your inbox or test connection to view the detailed threat analysis report here.
+              </p>
+            </div>
+          </motion.div>
+        )}
       {/* ── Results Summary ──────────────────────────────────────── */}
       {summary && (
         <motion.div
@@ -493,209 +801,8 @@ export default function InboxScanner({ onSelectEmail }: InboxScannerProps) {
         </motion.div>
       )}
 
-      {/* ── Inbox Summary ─────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#161616] p-5 sm:p-6"
-      >
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-[rgba(255,255,255,0.05)] flex items-center justify-center">
-            <span className="text-lg">📊</span>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-[#f5f5f5]">Inbox Summary</h3>
-            <p className="text-sm text-[#a3a3a3]">AI-powered threat overview of your recent emails</p>
-          </div>
-        </div>
+      </div>
 
-        {/* Day Range Selector */}
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <span className="text-[10px] text-[#666] uppercase tracking-wider mr-1">Last</span>
-          {DAY_OPTIONS.map((d) => (
-            <button
-              key={d}
-              onClick={() => setSummaryDays(d)}
-              disabled={summaryLoading}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                ${summaryDays === d
-                  ? "bg-[rgba(255,255,255,0.08)] text-white border border-[rgba(255,255,255,0.15)]"
-                  : "bg-white/[0.02] text-[#a3a3a3] border border-[rgba(255,255,255,0.08)] hover:bg-white/[0.03]"
-                } disabled:opacity-50`}
-            >
-              {d} {d === 1 ? "day" : "days"}
-            </button>
-          ))}
-          <button
-            onClick={fetchInboxSummary}
-            disabled={summaryLoading || !email || !password}
-            className="ml-auto px-5 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-accent to-safe
-                       text-white hover:from-accent/90 hover:to-safe/90 shadow-lg shadow-accent/15
-                       disabled:opacity-30 transition-all flex items-center gap-2"
-          >
-            {summaryLoading ? (
-              <><span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Analyzing...</>
-            ) : (
-              <>📊 Get Summary</>
-            )}
-          </button>
-        </div>
-
-        {summaryLoading && (
-          <div className="flex items-center gap-2 mb-3">
-            <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            <span className="text-xs text-[#666]">Scanning last {summaryDays} day{summaryDays > 1 ? "s" : ""}...</span>
-          </div>
-        )}
-
-        {summaryError && (
-          <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400 mb-3">
-            ❌ {summaryError}
-          </div>
-        )}
-
-        {/* Summary Results */}
-        {inboxSummary && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)] p-4 text-center">
-                <p className="text-2xl font-bold text-[#f5f5f5]">{inboxSummary.totalEmails}</p>
-                <p className="text-[10px] text-[#666] uppercase tracking-wider mt-1">Emails Analyzed</p>
-              </div>
-              <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4 text-center">
-                <p className="text-2xl font-bold text-emerald-400">{inboxSummary.stats.safe}</p>
-                <p className="text-[10px] text-emerald-400/50 uppercase tracking-wider mt-1">Safe</p>
-              </div>
-              <div className="rounded-xl bg-amber-500/5 border border-amber-500/10 p-4 text-center">
-                <p className="text-2xl font-bold text-amber-400">{inboxSummary.stats.suspicious}</p>
-                <p className="text-[10px] text-amber-400/50 uppercase tracking-wider mt-1">Suspicious</p>
-              </div>
-              <div className="rounded-xl bg-red-500/5 border border-red-500/10 p-4 text-center">
-                <p className="text-2xl font-bold text-red-400">{inboxSummary.stats.highRisk}</p>
-                <p className="text-[10px] text-red-400/50 uppercase tracking-wider mt-1">High Risk</p>
-              </div>
-            </div>
-
-            {/* Avg Score Bar */}
-            <div className="rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)] p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-[#a3a3a3]">Average Risk Score</span>
-                <span className={`text-sm font-bold ${
-                  inboxSummary.stats.avgScore > 60 ? "text-red-400" :
-                  inboxSummary.stats.avgScore > 30 ? "text-amber-400" : "text-emerald-400"
-                }`}>{inboxSummary.stats.avgScore}/100</span>
-              </div>
-              <div className="h-2 rounded-full bg-white/[0.03] overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${inboxSummary.stats.avgScore}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                  className={`h-full rounded-full ${
-                    inboxSummary.stats.avgScore > 60 ? "bg-red-500" :
-                    inboxSummary.stats.avgScore > 30 ? "bg-amber-500" : "bg-emerald-500"
-                  }`}
-                />
-              </div>
-            </div>
-
-            {/* Daily Timeline */}
-            {inboxSummary.timeline.length > 1 && (
-              <div className="rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)] p-4">
-                <h4 className="text-xs text-[#666] uppercase tracking-wider mb-3">Daily Breakdown</h4>
-                <div className="flex items-end gap-1 h-20">
-                  {inboxSummary.timeline.map((day, i) => {
-                    const maxTotal = Math.max(...inboxSummary.timeline.map((d) => d.total));
-                    const height = maxTotal > 0 ? (day.total / maxTotal) * 100 : 0;
-                    const riskyRatio = day.total > 0 ? day.risky / day.total : 0;
-                    return (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                        <div className="w-full flex flex-col justify-end" style={{ height: "60px" }}>
-                          <div
-                            className={`w-full rounded-t-sm transition-all ${
-                              riskyRatio > 0.5 ? "bg-red-500/40" : riskyRatio > 0 ? "bg-amber-500/30" : "bg-emerald-500/30"
-                            }`}
-                            style={{ height: `${height}%`, minHeight: day.total > 0 ? "4px" : "0" }}
-                          />
-                        </div>
-                        <span className="text-[8px] text-[#666] truncate w-full text-center">
-                          {day.date.split("/").slice(0, 2).join("/")}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Top Senders */}
-            {inboxSummary.topSenders.length > 0 && (
-              <div className="rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)] p-4">
-                <h4 className="text-xs text-[#666] uppercase tracking-wider mb-3">Top Senders</h4>
-                <div className="space-y-2">
-                  {inboxSummary.topSenders.map((s, i) => (
-                    <div key={i} className="flex items-center justify-between py-1">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ${
-                          s.maxScore > 60 ? "bg-red-500/20 text-red-400" :
-                          s.maxScore > 30 ? "bg-amber-500/20 text-amber-400" : "bg-emerald-500/20 text-emerald-400"
-                        }`}>{i + 1}</span>
-                        <span className="text-xs text-[#a3a3a3] truncate">{s.address}</span>
-                      </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="text-[10px] text-[#666]">{s.count} email{s.count > 1 ? "s" : ""}</span>
-                        <span className={`text-[10px] font-medium ${
-                          s.maxScore > 60 ? "text-red-400" : s.maxScore > 30 ? "text-amber-400" : "text-emerald-400"
-                        }`}>Score: {s.maxScore}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Email List (sorted by risk) */}
-            <div className="rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)] p-4">
-              <h4 className="text-xs text-[#666] uppercase tracking-wider mb-3">
-                All Emails — Sorted by Risk
-              </h4>
-              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-                {inboxSummary.emails.map((em, i) => {
-                  const style = VERDICT_STYLES[em.verdict] || VERDICT_STYLES.SAFE;
-                  return (
-                    <motion.div
-                      key={em.uid}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.02 }}
-                      className={`rounded-lg border p-3 ${style.bg} border-[rgba(255,255,255,0.08)]`}
-                    >
-                      <div className="flex items-start gap-2">
-                        <span className="text-sm mt-0.5">{style.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-[#b3b3b3] font-medium truncate">{em.subject}</p>
-                          <p className="text-[10px] text-white/25 mt-0.5">
-                            {em.from.match(/<(.+?)>/)?.[1] || em.from} · {new Date(em.date).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${style.bg} ${style.text}`}>
-                            {em.score}
-                          </span>
-                          <span className={`px-1.5 py-0.5 rounded-full text-[8px] ${style.bg} ${style.text}`}>
-                            {style.label}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </motion.div>
     </div>
   );
 }

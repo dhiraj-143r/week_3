@@ -21,7 +21,7 @@ interface WatchResult {
 const VERDICT_STYLES: Record<string, { bg: string; text: string; icon: string; label: string }> = {
   HIGH_RISK: { bg: "bg-red-500/15", text: "text-red-400", icon: "🔴", label: "High Risk" },
   MEDIUM_RISK: { bg: "bg-amber-500/15", text: "text-amber-400", icon: "🟡", label: "Suspicious" },
-  SAFE: { bg: "bg-emerald-500/10", text: "text-emerald-400", icon: "🟢", label: "Safe" },
+  SAFE: { bg: "bg-emerald-500/15", text: "text-emerald-400", icon: "🟢", label: "Safe" },
   ERROR: { bg: "bg-gray-500/15", text: "text-gray-400", icon: "⚠️", label: "Error" },
 };
 
@@ -34,6 +34,7 @@ export default function EmailWatchdog() {
   const [phone, setPhone] = useState("");
   const [reportEmail, setReportEmail] = useState("");
   const [isWatching, setIsWatching] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [alerts, setAlerts] = useState<WatchResult[]>([]);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export default function EmailWatchdog() {
   // ── Start watching (SSE / IMAP IDLE) ─────────────────────────────────
   const startWatching = useCallback(() => {
     if (!email || !password || !phone) return;
-    setIsWatching(true);
+    setIsConnecting(true);
     setError(null);
     setAlerts([]);
     setNewCount(0);
@@ -64,6 +65,13 @@ export default function EmailWatchdog() {
       const data = JSON.parse(e.data);
       setStatusMsg(data.message);
       setError(null);
+      // Transition from connecting loader → live view after brief delay
+      if (!isWatching) {
+        setTimeout(() => {
+          setIsConnecting(false);
+          setIsWatching(true);
+        }, 2500);
+      }
     });
 
     es.addEventListener("alert", (e) => {
@@ -76,8 +84,8 @@ export default function EmailWatchdog() {
       // SSE error — could be connection drop
       if (es.readyState === EventSource.CLOSED) {
         setIsWatching(false);
+        setIsConnecting(false);
         setStatusMsg(null);
-        setError("Connection closed. Click Start to reconnect.");
       } else {
         try {
           const data = JSON.parse((e as MessageEvent).data);
@@ -91,6 +99,7 @@ export default function EmailWatchdog() {
     es.onerror = () => {
       if (es.readyState === EventSource.CLOSED) {
         setIsWatching(false);
+        setIsConnecting(false);
         setStatusMsg(null);
       }
     };
@@ -103,6 +112,7 @@ export default function EmailWatchdog() {
       eventSourceRef.current = null;
     }
     setIsWatching(false);
+    setIsConnecting(false);
     setStatusMsg(null);
   }, []);
 
@@ -117,15 +127,95 @@ export default function EmailWatchdog() {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-4">
+      <AnimatePresence mode="wait">
+        {/* ── Connecting Loader ── */}
+        {isConnecting && (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center justify-center text-center py-20 lg:py-32"
+          >
+            {/* Radar Animation */}
+            <div className="relative w-[140px] h-[140px] flex items-center justify-center mb-8">
+              <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="rgba(220,220,230,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="absolute inset-0 rounded-full border border-[rgba(220,220,230,0.2)]"
+                  animate={{ scale: [1, 2.5], opacity: [0.6, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, delay: i * 1, ease: "easeOut" }}
+                />
+              ))}
+            </div>
+
+            <motion.h2
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              style={{ fontFamily: "'Playfair Display', Georgia, serif", fontStyle: "italic" }}
+              className="text-2xl text-white mb-3"
+            >
+              Establishing connection...
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-sm text-white/40 max-w-md"
+            >
+              Connecting to your inbox via IMAP IDLE for real-time monitoring. Alerts will fire instantly.
+            </motion.p>
+
+            {/* Animated Tags */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.9 }}
+              className="flex gap-2 mt-6 flex-wrap justify-center"
+            >
+              <span className="feature-tag tag-green">Live</span>
+              <span className="feature-tag">IMAP IDLE</span>
+              <span className="feature-tag">WhatsApp</span>
+              <span className="feature-tag">Email Reports</span>
+            </motion.div>
+
+            {/* Progress dots */}
+            <div className="flex items-center gap-1.5 mt-8">
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-2 h-2 rounded-full bg-white/20"
+                  animate={{ opacity: [0.2, 1, 0.2], scale: [0.8, 1.2, 0.8] }}
+                  transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── Normal UI (form + live feed) ── */}
+        {!isConnecting && (
+          <motion.div
+            key="main"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className={`${isWatching ? "grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch" : "flex justify-center"}`}
+          >
       {/* ── Config Card ──────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#161616] p-5 sm:p-6"
+        className={`rounded-2xl border border-white/[0.06] bg-[#111111] p-5 sm:p-6 min-h-[500px] flex flex-col justify-between ${!isWatching ? "w-full max-w-xl" : ""}`}
       >
         <div className="flex items-center gap-3 mb-5">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-            isWatching ? "bg-emerald-500/10" : "bg-amber-500/10"
+            isWatching ? "bg-emerald-500/15" : "bg-orange-500/15"
           }`}>
             <motion.span
               animate={isWatching ? { scale: [1, 1.2, 1] } : {}}
@@ -136,16 +226,16 @@ export default function EmailWatchdog() {
             </motion.span>
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-[#f5f5f5]">
+            <h3 className="text-lg font-semibold text-white">
               Real-Time Watchdog
               {isWatching && (
-                <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 font-medium">
+                <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/15 text-emerald-400 font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   LIVE
                 </span>
               )}
             </h3>
-            <p className="text-sm text-[#a3a3a3]">
+            <p className="text-sm text-white/40">
               {isWatching
                 ? "Instant detection — no polling, no delays"
                 : "Connect once → instant WhatsApp + Email alerts on every new email"}
@@ -162,8 +252,8 @@ export default function EmailWatchdog() {
               disabled={isWatching}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all capitalize
                 ${provider === p
-                  ? "bg-[rgba(255,255,255,0.08)] text-white border border-[rgba(255,255,255,0.15)]"
-                  : "bg-white/[0.02] text-[#a3a3a3] border border-[rgba(255,255,255,0.08)] hover:bg-white/[0.03]"
+                  ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+                  : "bg-white/[0.03] text-white/40 border border-white/[0.06] hover:bg-white/[0.05]"
                 } disabled:opacity-50`}
             >
               {p === "gmail" ? "📧 Gmail" : p === "outlook" ? "📬 Outlook" : "📩 Yahoo"}
@@ -179,8 +269,8 @@ export default function EmailWatchdog() {
             onChange={(e) => setEmail(e.target.value)}
             disabled={isWatching}
             placeholder="your@gmail.com"
-            className="w-full px-3 py-2.5 rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)]
-                       text-white placeholder-[#404040] text-sm focus:outline-none focus:border-[rgba(255,255,255,0.15)]
+            className="w-full px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]
+                       text-white placeholder-white/20 text-sm focus:outline-none focus:border-indigo-500/40
                        disabled:opacity-50"
           />
           <input
@@ -189,36 +279,36 @@ export default function EmailWatchdog() {
             onChange={(e) => setPassword(e.target.value)}
             disabled={isWatching}
             placeholder="App Password"
-            className="w-full px-3 py-2.5 rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)]
-                       text-white placeholder-[#404040] text-sm focus:outline-none focus:border-[rgba(255,255,255,0.15)]
+            className="w-full px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]
+                       text-white placeholder-white/20 text-sm focus:outline-none focus:border-indigo-500/40
                        disabled:opacity-50"
           />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
           <div>
-            <label className="block text-[10px] text-[#666] mb-1 uppercase tracking-wider">WhatsApp Number</label>
+            <label className="block text-[10px] text-white/30 mb-1 uppercase tracking-wider">WhatsApp Number</label>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               disabled={isWatching}
               placeholder="+91 98765 43210"
-              className="w-full px-3 py-2.5 rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)]
-                         text-white placeholder-[#404040] text-sm focus:outline-none focus:border-[rgba(255,255,255,0.15)]
+              className="w-full px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]
+                         text-white placeholder-white/20 text-sm focus:outline-none focus:border-indigo-500/40
                          disabled:opacity-50"
             />
           </div>
           <div>
-            <label className="block text-[10px] text-[#666] mb-1 uppercase tracking-wider">Send Report To Email</label>
+            <label className="block text-[10px] text-white/30 mb-1 uppercase tracking-wider">Send Report To Email</label>
             <input
               type="email"
               value={reportEmail}
               onChange={(e) => setReportEmail(e.target.value)}
               disabled={isWatching}
               placeholder="report@example.com"
-              className="w-full px-3 py-2.5 rounded-xl bg-white/[0.02] border border-[rgba(255,255,255,0.08)]
-                         text-white placeholder-[#404040] text-sm focus:outline-none focus:border-[rgba(255,255,255,0.15)]
+              className="w-full px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]
+                         text-white placeholder-white/20 text-sm focus:outline-none focus:border-indigo-500/40
                          disabled:opacity-50"
             />
           </div>
@@ -232,11 +322,11 @@ export default function EmailWatchdog() {
                 {isWatching && (
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 )}
-                <span className="text-xs text-[#666]">{statusMsg}</span>
+                <span className="text-xs text-white/30">{statusMsg}</span>
               </div>
             )}
             {newCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] bg-[rgba(255,255,255,0.05)] text-white font-bold">
+              <span className="px-1.5 py-0.5 rounded text-[9px] bg-indigo-500/15 text-indigo-400 font-bold">
                 {newCount} detected
               </span>
             )}
@@ -247,7 +337,7 @@ export default function EmailWatchdog() {
             className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2
               ${isWatching
                 ? "bg-red-500/15 text-red-400 border border-red-500/20 hover:bg-red-500/25"
-                : "bg-gradient-to-r from-emerald-500 to-accent text-white hover:from-emerald-400 hover:to-accent/80 shadow-lg shadow-emerald-500/15"
+                : "bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-500/20"
               } disabled:opacity-30`}
           >
             {isWatching ? (
@@ -270,19 +360,19 @@ export default function EmailWatchdog() {
       {/* ── Live Alert Feed ──────────────────────────────────── */}
       {isWatching && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#161616] p-5">
+          className="rounded-2xl border border-white/[0.06] bg-[#111111] p-5 flex flex-col min-h-[500px]">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-xs text-[#666] uppercase tracking-wider font-medium">
+            <h4 className="text-xs text-white/30 uppercase tracking-wider font-medium">
               Live Alert Feed
             </h4>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[10px] text-emerald-400/50">IMAP IDLE — Instant</span>
+              <span className="text-[10px] text-emerald-400/60">IMAP IDLE — Instant</span>
             </div>
           </div>
 
           {alerts.length === 0 ? (
-            <div className="text-center py-8">
+            <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
               <motion.div
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -290,8 +380,8 @@ export default function EmailWatchdog() {
               >
                 <span className="text-xl">⚡</span>
               </motion.div>
-              <p className="text-xs text-[#666]">Connected — waiting for new emails...</p>
-              <p className="text-[10px] text-[#666]/50 mt-1">Alerts will appear instantly when an email arrives</p>
+              <p className="text-xs text-white/20">Connected — waiting for new emails...</p>
+              <p className="text-[10px] text-white/10 mt-1">Alerts will appear instantly when an email arrives</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -305,16 +395,16 @@ export default function EmailWatchdog() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ delay: i * 0.05 }}
-                      className={`rounded-xl border p-4 ${style.bg} border-[rgba(255,255,255,0.08)]`}
+                      className={`rounded-xl border p-4 ${style.bg} border-white/[0.06]`}
                     >
                       <div className="flex items-start gap-3">
                         <span className="text-lg mt-0.5">{style.icon}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-[#d4d4d4] font-medium truncate">{alert.subject}</p>
-                          <p className="text-xs text-[#666] mt-0.5">
+                          <p className="text-sm text-white/80 font-medium truncate">{alert.subject}</p>
+                          <p className="text-xs text-white/30 mt-0.5">
                             {alert.from} · {new Date(alert.date).toLocaleString()}
                           </p>
-                          <p className="text-xs text-[#a3a3a3] mt-1 line-clamp-2">{alert.summary}</p>
+                          <p className="text-xs text-white/40 mt-1 line-clamp-2">{alert.summary}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1 flex-shrink-0">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${style.bg} ${style.text}`}>
@@ -324,7 +414,7 @@ export default function EmailWatchdog() {
                             <span className="text-[9px] text-emerald-400/50">✓ WhatsApp sent</span>
                           )}
                           {alert.emailSent && (
-                            <span className="text-[9px] text-white/50">✓ Email sent</span>
+                            <span className="text-[9px] text-indigo-400/50">✓ Email sent</span>
                           )}
                         </div>
                       </div>
@@ -336,6 +426,9 @@ export default function EmailWatchdog() {
           )}
         </motion.div>
       )}
+      </motion.div>
+      )}
+      </AnimatePresence>
     </div>
   );
 }

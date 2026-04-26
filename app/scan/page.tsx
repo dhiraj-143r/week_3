@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import ScanPageStyles from "@/components/ScanPageStyles";
+import InboxScanner from "@/components/InboxScanner";
+import EmailWatchdog from "@/components/EmailWatchdog";
 
 export default function ScanPage() {
   const [activeTab, setActiveTab] = useState<"paste" | "inbox" | "watchdog">("paste");
@@ -14,6 +16,8 @@ export default function ScanPage() {
   const [charCount, setCharCount] = useState(0);
   const [notify, setNotify] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifyPhone, setNotifyPhone] = useState("");
   
   // Inbox states
   const [inboxEmail, setInboxEmail] = useState("");
@@ -70,6 +74,8 @@ export default function ScanPage() {
     }, 2500);
   };
 
+  const router = useRouter();
+
   const handleScan = async () => {
     if (!emailContent.trim()) {
       toast.error("Please paste an email to scan.");
@@ -80,10 +86,30 @@ export default function ScanPage() {
     document.body.style.overflow = "auto";
 
     // Store the email content so the loading page can fire the API call
-    sessionStorage.setItem("phishfilter_email_to_scan", emailContent);
+    try {
+      sessionStorage.setItem("phishfilter_email_to_scan", emailContent);
+      
+      // Store notification preferences if enabled
+      if (notify) {
+        if (notifyEmail.trim()) sessionStorage.setItem("phishfilter_notify_email", notifyEmail.trim());
+        if (notifyPhone.trim()) sessionStorage.setItem("phishfilter_notify_phone", notifyPhone.trim());
+      }
+
+      // Verify storage worked
+      const stored = sessionStorage.getItem("phishfilter_email_to_scan");
+      if (!stored) {
+        toast.error("Failed to store email. Try disabling private/incognito mode.");
+        setIsScanning(false);
+        return;
+      }
+    } catch (e) {
+      toast.error("sessionStorage is blocked. Please disable private browsing.");
+      setIsScanning(false);
+      return;
+    }
     
-    // Navigate to the loading page
-    window.location.href = "/scan/loading";
+    // Navigate to the loading page (client-side to preserve sessionStorage)
+    router.push("/scan/loading");
   };
 
   useEffect(() => {
@@ -240,10 +266,8 @@ export default function ScanPage() {
       {/* ═══ ZONE 3: MAIN PANEL ═══ */}
       <main className="scan-main-panel">
         
-        {/* LEFT SIDEBAR */}
-        <aside className="scan-sidebar scan-anim-sidebar">
-          <div className="sidebar-label">SCAN MODE</div>
-          
+        {/* TABS ROW */}
+        <nav className="scan-tabs scan-anim-sidebar">
           <button className={`sidebar-btn ${activeTab === 'paste' ? 'active' : ''}`} onClick={() => handleTabChange('paste')}>
             <span className="btn-icon">📋</span>
             <div className="btn-text">
@@ -267,13 +291,7 @@ export default function ScanPage() {
               <div className="btn-sub">Real-time monitoring</div>
             </div>
           </button>
-
-          <div className="sidebar-tags">
-            {["Header Analysis", "URL Scanning", "Homograph Detection", "Brand Impersonation", "VirusTotal", "SPF/DKIM", "AI Forensics", "IMAP Inbox", "PDF Scanner", "QR Detection"].map((tag, i) => (
-              <span key={tag} className="tag-pill anim-pill" style={{ animationDelay: `${900 + (i * 40)}s, ${Math.random() * 8}s` }}>{tag}</span>
-            ))}
-          </div>
-        </aside>
+        </nav>
 
         {/* RIGHT CONTENT AREA */}
         <section className="scan-content-area scan-anim-content">
@@ -336,8 +354,8 @@ export default function ScanPage() {
                           transition={{ duration: 0.2 }}
                         >
                           <div className="notify-input-group">
-                            <input type="email" placeholder="Email Address" className="notify-input" />
-                            <input type="tel" placeholder="Phone Number (SMS)" className="notify-input" />
+                            <input type="email" placeholder="Email Address" className="notify-input" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} />
+                            <input type="tel" placeholder="Phone Number (WhatsApp)" className="notify-input" value={notifyPhone} onChange={(e) => setNotifyPhone(e.target.value)} />
                           </div>
                         </motion.div>
                       )}
@@ -368,100 +386,19 @@ export default function ScanPage() {
               </motion.div>
             )}
 
-            {/* PANEL 2: INBOX */}
+            {/* PANEL 2: INBOX — Full InboxScanner Component */}
             {activeTab === 'inbox' && (
-              <motion.div key="inbox" className="panel-feature" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12, transition: { duration: 0.2 } }} transition={{ duration: 0.25, delay: 0.15 }}>
-                <div className="feature-card">
-                  <div className="feature-anim">
-                    <div className="inbox-anim">
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="4" width="20" height="16" rx="2" />
-                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                      </svg>
-                      <div className="inbox-orbit"><div className="inbox-dot" /></div>
-                    </div>
-                  </div>
-                  <div className="feature-body">
-                    <h2 className="feature-title">Connect your inbox</h2>
-                    <p className="feature-desc">Securely connect via IMAP to scan every incoming email automatically. PhishFilter monitors your inbox in real-time and flags threats before you open them.</p>
-                    <div className="feature-tags">
-                      <span className="feature-tag">IMAP</span>
-                      <span className="feature-tag">OAuth 2.0</span>
-                      <span className="feature-tag">Auto-scan</span>
-                      <span className="feature-tag">Coming Soon</span>
-                    </div>
-                    <div className="inbox-config" style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      <input 
-                        type="email" 
-                        placeholder="Email Address (for IMAP connection)" 
-                        className="notify-input" 
-                        style={{ width: '100%', maxWidth: '400px' }} 
-                        value={inboxEmail}
-                        onChange={(e) => setInboxEmail(e.target.value)}
-                      />
-                      <input 
-                        type="tel" 
-                        placeholder="Phone Number (for SMS Alerts)" 
-                        className="notify-input" 
-                        style={{ width: '100%', maxWidth: '400px' }} 
-                        value={inboxPhone}
-                        onChange={(e) => setInboxPhone(e.target.value)}
-                      />
-                      <button 
-                        className={`btn-scan btn-hero ${isConnectingInbox ? 'scanning' : ''}`} 
-                        style={{ marginTop: 8, width: 'fit-content' }}
-                        onClick={handleInboxConnect}
-                      >
-                        {isConnectingInbox ? (
-                          <>
-                            <div className="spinner-ring" />
-                            Connecting...
-                          </>
-                        ) : "Connect Inbox"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              <motion.div key="inbox" className="panel-inbox-full" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12, transition: { duration: 0.2 } }} transition={{ duration: 0.25, delay: 0.15 }} style={{ overflow: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
+                <InboxScanner />
               </motion.div>
             )}
 
-            {/* PANEL 3: WATCHDOG */}
+            {/* PANEL 3: WATCHDOG — Animation + Full EmailWatchdog Component */}
             {activeTab === 'watchdog' && (
-              <motion.div key="watchdog" className="panel-feature" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12, transition: { duration: 0.2 } }} transition={{ duration: 0.25, delay: 0.15 }}>
-                <div className="feature-card">
-                  <div className="feature-anim">
-                    <div className="watchdog-anim">
-                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(220,220,230,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                      </svg>
-                      <div className="radar-pulse-ring r1" />
-                      <div className="radar-pulse-ring r2" />
-                      <div className="radar-pulse-ring r3" />
-                    </div>
-                  </div>
-                  <div className="feature-body">
-                    <h2 className="feature-title">Real-time monitoring</h2>
-                    <p className="feature-desc">Activate Watchdog to continuously monitor your inbox. Get instant alerts when suspicious emails arrive — phishing attempts are flagged and quarantined automatically.</p>
-                    <div className="watchdog-status" style={{ marginTop: 12 }}>
-                      <span className="status-dot" /> Waiting to activate...
-                    </div>
-                    <div className="feature-tags" style={{ marginTop: 12 }}>
-                      <span className="feature-tag tag-green">Live</span>
-                      <span className="feature-tag">Alerts</span>
-                      <span className="feature-tag">Quarantine</span>
-                    </div>
-                    <button 
-                      className={`btn-scan btn-watchdog ${isActivatingWatchdog ? 'scanning' : ''}`} 
-                      style={{ marginTop: 20 }}
-                      onClick={handleWatchdogActivate}
-                    >
-                      {isActivatingWatchdog ? (
-                        <>
-                          <div className="spinner-ring" />
-                          Activating...
-                        </>
-                      ) : "Activate Watchdog"}
-                    </button>
+              <motion.div key="watchdog" className="panel-inbox-full" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12, transition: { duration: 0.2 } }} transition={{ duration: 0.25, delay: 0.15 }} style={{ overflow: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
+                <div className="flex justify-center pt-12 lg:pt-20">
+                  <div className="w-full">
+                    <EmailWatchdog />
                   </div>
                 </div>
               </motion.div>

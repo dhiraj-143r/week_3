@@ -179,7 +179,61 @@ export async function analyzeEmail(
   return parseGrokResponse(response);
 }
 
-// ── Helper Functions ───────────────────────────────────────────────────
+/**
+ * Strip HTML bloat from email content, keeping only meaningful text + URLs.
+ * This prevents AI timeouts on heavy marketing emails.
+ */
+function sanitizeEmailContent(raw: string): string {
+  let text = raw;
+
+  // 1. Preserve all URLs before stripping tags
+  const urlMatches = text.match(/https?:\/\/[^\s"'<>]+/gi) || [];
+
+  // 2. Keep email headers (everything before the first HTML tag or blank line block)
+  const headerEndIdx = text.search(/<(!DOCTYPE|html|head|body|div|table|style)/i);
+  const headers = headerEndIdx > 0 ? text.substring(0, headerEndIdx) : "";
+
+  // 3. Strip <style>...</style>, <script>...</script>, HTML comments
+  text = text.replace(/<style[\s\S]*?<\/style>/gi, "");
+  text = text.replace(/<script[\s\S]*?<\/script>/gi, "");
+  text = text.replace(/<!--[\s\S]*?-->/g, "");
+
+  // 4. Replace <br>, <p>, <div>, <tr>, <li> with newlines for readability
+  text = text.replace(/<(br|\/p|\/div|\/tr|\/li|\/h[1-6])[^>]*>/gi, "\n");
+
+  // 5. Strip all remaining HTML tags
+  text = text.replace(/<[^>]+>/g, " ");
+
+  // 6. Decode common HTML entities
+  text = text.replace(/&nbsp;/gi, " ");
+  text = text.replace(/&amp;/gi, "&");
+  text = text.replace(/&lt;/gi, "<");
+  text = text.replace(/&gt;/gi, ">");
+  text = text.replace(/&quot;/gi, '"');
+  text = text.replace(/&#39;/gi, "'");
+  text = text.replace(/&#\d+;/g, "");
+
+  // 7. Collapse excessive whitespace
+  text = text.replace(/[ \t]+/g, " ");
+  text = text.replace(/\n{3,}/g, "\n\n");
+  text = text.trim();
+
+  // 8. Reconstruct: headers + cleaned body + unique URLs
+  const uniqueUrls = [...new Set(urlMatches)];
+  const urlSection = uniqueUrls.length > 0
+    ? `\n\n=== EXTRACTED URLs ===\n${uniqueUrls.join("\n")}`
+    : "";
+
+  const combined = (headers ? headers.trim() + "\n\n=== EMAIL BODY (cleaned) ===\n" : "") + text + urlSection;
+
+  // 9. Truncate to ~12K chars to stay well within AI context limits
+  const MAX_CHARS = 12000;
+  if (combined.length > MAX_CHARS) {
+    return combined.substring(0, MAX_CHARS) + `\n\n[... truncated from ${combined.length} chars]`;
+  }
+
+  return combined;
+}
 
 /**
  * Build the user message combining email content and all enrichment data.
@@ -190,8 +244,10 @@ function buildUserPrompt(
   virusTotalResults: Record<string, unknown> | null,
   screenshotUrl: string
 ): string {
+  const cleanedContent = sanitizeEmailContent(emailContent);
+
   let prompt = `ANALYZE THIS EMAIL FOR PHISHING:\n\n`;
-  prompt += `=== RAW EMAIL CONTENT ===\n${emailContent}\n\n`;
+  prompt += `=== RAW EMAIL CONTENT ===\n${cleanedContent}\n\n`;
 
   if (firecrawlResults) {
     prompt += `=== FIRECRAWL URL ANALYSIS ===\n${JSON.stringify(firecrawlResults, null, 2)}\n\n`;
@@ -230,7 +286,7 @@ async function callClaudeAPI(userPrompt: string): Promise<string> {
         "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
-      timeout: 60000,
+      timeout: 90000,
     }
   );
 
@@ -265,7 +321,7 @@ async function callGeminiAPI(userPrompt: string): Promise<string> {
     },
     {
       headers: { "Content-Type": "application/json" },
-      timeout: 60000,
+      timeout: 90000,
     }
   );
 
@@ -297,7 +353,7 @@ async function callGrokAPI(model: string, userPrompt: string): Promise<string> {
         Authorization: `Bearer ${GROK_API_KEY}`,
         "Content-Type": "application/json",
       },
-      timeout: 60000,
+      timeout: 90000,
     }
   );
 

@@ -25,6 +25,7 @@ export default function ScanLoadingPage() {
   const [scanComplete, setScanComplete] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hasFiredRef = useRef(false);
 
   /* ── Canvas Particle Field ── */
   useEffect(() => {
@@ -71,6 +72,10 @@ export default function ScanLoadingPage() {
 
   /* ── Stage progression & API call ── */
   useEffect(() => {
+    // Guard against React StrictMode double-firing
+    if (hasFiredRef.current) return;
+    hasFiredRef.current = true;
+
     // Advance stages gradually while waiting
     const stageTimer = setInterval(() => {
       setCurrentStage((prev) => {
@@ -90,13 +95,18 @@ export default function ScanLoadingPage() {
 
     // Fire the actual API call
     const emailContent = sessionStorage.getItem("phishfilter_email_to_scan");
+    const userEmail = sessionStorage.getItem("phishfilter_notify_email") || "";
+    const userPhone = sessionStorage.getItem("phishfilter_notify_phone") || "";
     if (emailContent) {
+      // Only remove AFTER successfully reading
       sessionStorage.removeItem("phishfilter_email_to_scan");
+      sessionStorage.removeItem("phishfilter_notify_email");
+      sessionStorage.removeItem("phishfilter_notify_phone");
       
       fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailContent }),
+        body: JSON.stringify({ emailContent, userEmail, userPhone }),
       })
         .then((res) => res.json())
         .then((data) => {
