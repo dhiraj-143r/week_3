@@ -1,62 +1,79 @@
-# 🛡️ PhishFilter — AI-Powered Phishing Detection
+# 🛡️ PhishFilter × Locus — AI Security-as-a-Service
 
-> **Paste any suspicious email. AI tears it apart instantly.**
+> **Paste any suspicious email. AI tears it apart. Pay per scan with USDC.**
 
-PhishFilter is an advanced email forensics platform that combines multiple AI engines and security tools to detect phishing attacks, brand impersonation, homograph abuse, and malicious URLs — all in real-time.
+PhishFilter is a monetized AI email security platform that combines multi-engine forensic analysis with **Locus Checkout** for pay-per-scan USDC payments. Built for the **Paygentic Hackathon Week 3** — one integration that works for both humans and AI agents.
 
-![PhishFilter](https://img.shields.io/badge/PhishFilter-v1.0.0-6366f1?style=for-the-badge)
+![PhishFilter](https://img.shields.io/badge/PhishFilter-v2.0.0-5934FF?style=for-the-badge)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=nextdotjs)
+![Locus](https://img.shields.io/badge/Locus-USDC-4101F6?style=for-the-badge)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
+
+---
+
+## 🏆 Hackathon Submission — Paygentic Week 3
+
+### The Problem
+Email phishing causes **$17.4B in losses annually**. Existing tools are enterprise-locked, expensive, and not accessible to individuals, small businesses, or AI agents.
+
+### The Solution
+PhishFilter monetizes email security analysis using **Locus Checkout** for USDC payments on Base:
+- **Humans** paste emails → get instant forensic reports → pay per scan
+- **AI Agents** discover the service via `skill.md` → purchase credits programmatically → call the scan API
+- **x402 Protocol** — scan endpoint returns HTTP 402 with inline purchase instructions when credits run out
+
+### Why Locus?
+- ✅ Machine-readable checkout pages → agents can discover and pay programmatically
+- ✅ USDC on Base → fast, cheap, borderless payments
+- ✅ One integration for both human and agent buyers
+- ✅ Webhook-driven credit issuance → seamless post-payment flow
+
+---
+
+## 💰 Business Model
+
+| Plan | Price | Credits | Target |
+|------|-------|---------|--------|
+| **Free Tier** | $0 | 3/day | Trial users |
+| **Single Scan** | 0.50 USDC | 1 | One-off checks |
+| **Scan Pack** | 5.00 USDC | 15 | Regular users |
+| **Pro Monthly** | 20.00 USDC | Unlimited | Power users & agents |
+
+**Revenue model**: Pay-per-scan with USDC via Locus Checkout on Base network.
 
 ---
 
 ## ✨ Features
 
 ### 🔍 Core Analysis Engine
-- **AI-Powered Verdict** — Grok AI (xAI) analyzes email content and returns HIGH_RISK / MEDIUM_RISK / SAFE verdict with confidence score
-- **URL Scanning** — VirusTotal integration scans every URL against 70+ antivirus engines
-- **Homograph Detection** — 80+ Unicode lookalike character mappings detect IDN homograph attacks (e.g., `paypaI.com` impersonating `paypal.com`)
-- **URL Unshortening** — Firecrawl resolves bit.ly/tinyurl links to reveal true destinations
-- **Brand Impersonation** — Detects impersonation of 40+ major brands (Google, PayPal, Microsoft, etc.)
-- **SPF/DKIM/DMARC Validation** — Extracts and displays email authentication results
-- **Header Hop Analysis** — Traces email's journey through mail servers with IP geolocation
+- **Multi-AI Verdict** — Gemini + Claude + Grok AI analyze email content with threat scoring (0-100)
+- **VirusTotal Scanning** — Every URL scanned against 70+ antivirus engines
+- **Homograph Detection** — 80+ Unicode lookalike mappings detect IDN homograph attacks
+- **URL Unshortening** — Firecrawl resolves shortened links to reveal true destinations
+- **Brand Impersonation** — Detects impersonation of 40+ major brands
+- **SPF/DKIM/DMARC** — Email authentication validation
+- **Header Hop Analysis** — Traces email's geographic path with IP geolocation
 
-### 📊 Forensic Dashboard
-- **Verdict Banner** — Animated score ring with pulse effects
-- **Security Signals Grid** — Expandable cards showing each detection with technical details
-- **URL Analysis Table** — Original vs unshortened URLs with VirusTotal scores
-- **Screenshot Preview** — Safe preview of suspicious landing pages
-- **Header Hop Map** — Interactive world map showing email's geographic path
-- **Sender Analysis** — From vs Return-Path domain mismatch detection
+### 💳 Locus Checkout Integration
+- **3 Pricing Tiers** — Single scan, pack, and pro plans
+- **USDC Payments** — On-chain payments on Base network
+- **Webhook Handler** — HMAC-verified, auto-credits on payment confirmation
+- **Credit Gating** — HTTP 402 when credits exhausted → redirect to checkout
+- **Live Credit Badge** — Real-time credit count in navbar
 
-### 🔊 Voice Verdict
-- **Bilingual TTS** — Sarvam AI generates voice verdicts in English and Hindi
-- **Auto-play** — Speaks the verdict automatically when report loads
-- **Audio Visualizer** — Animated equalizer bars during playback
+### 🤖 Agent-Readable API
+- **Service Catalog** — `GET /api/agent/services` — full capabilities, pricing, endpoints
+- **Programmatic Purchase** — `POST /api/agent/purchase` — creates Locus Checkout sessions
+- **Agent Scan** — `POST /api/agent/scan` — structured threat reports
+- **x402 Protocol** — HTTP 402 with inline purchase instructions
+- **Discovery Files** — `skill.md`, `ai-plugin.json`, `openapi.json`
 
-### 📄 PDF Export
-- **4-Page Professional Report** — Downloadable forensic analysis PDF
-  - Page 1: Verdict, score, executive summary, authentication results
-  - Page 2: Full signals table with severity levels
-  - Page 3: URL analysis, homograph report, header hops
-  - Page 4: Technical summary, raw data, legal disclaimer
-
-### 📱 Notifications
-- **Email Reports** — HTML-formatted forensic report via AgentMail
-- **WhatsApp Alerts** — Instant verdict notification to your phone
-- **Fire-and-forget** — Notifications run in background, don't delay the response
-
-### 🧩 Chrome Extension
-- **Gmail Integration** — "Scan with PhishFilter" button injected into every email
-- **Inline Badges** — RED/AMBER/GREEN verdict badges displayed above email body
-- **Scan History** — Last 5 scans accessible from the popup dashboard
-- **Notification Settings** — Save email/phone preferences for alerts
-
-### 🕐 Session Features
-- **Threat Timeline** — Session history of all analyzed emails with verdict badges
-- **Demo Mode** — One-click toggle for instant mock HIGH_RISK report (no API calls)
-- **Sample Email** — Pre-loaded realistic phishing email for live demos
-- **Skeleton Loading** — Professional loading states instead of spinners
+### 📊 Premium UI
+- **Glassmorphism Pricing Page** — 3-tier cards with particle field background
+- **Payment Success Page** — Confetti animation + on-chain confirmation details
+- **Smart Scan Button** — Shows credit count, redirects when exhausted
+- **Forensic Dashboard** — Interactive world map, expandable signal cards, PDF export
+- **Voice Verdict** — Bilingual TTS (English + Hindi) via Sarvam AI
 
 ---
 
@@ -65,18 +82,58 @@ PhishFilter is an advanced email forensics platform that combines multiple AI en
 | Category | Technology |
 |---|---|
 | **Framework** | Next.js 14 (App Router, TypeScript) |
-| **Styling** | Tailwind CSS + Framer Motion animations |
-| **AI Engine** | xAI Grok (grok-3-beta / grok-2) |
-| **URL Scanning** | VirusTotal via Locus API |
+| **Payments** | Locus Checkout SDK (USDC on Base) |
+| **AI Engine** | Gemini 2.0 Flash → Claude 3.5 → Grok 3 (waterfall) |
+| **URL Scanning** | VirusTotal (70+ engines) |
 | **URL Scraping** | Firecrawl API |
-| **IP Geolocation** | IPinfo via Locus API |
-| **Screenshots** | ScreenshotOne via Locus API |
 | **Voice TTS** | Sarvam AI (English + Hindi) |
-| **Email Notifications** | AgentMail via Locus API |
-| **PDF Generation** | jsPDF |
-| **Map Visualization** | react-simple-maps |
-| **Notifications** | react-hot-toast |
-| **Extension** | Chrome Manifest V3 |
+| **Styling** | Vanilla CSS + Framer Motion |
+| **PDF Export** | jsPDF |
+| **Map** | react-simple-maps |
+
+---
+
+## 🤖 Agent API — Quick Start
+
+AI agents can discover, purchase, and use PhishFilter programmatically:
+
+### 1. Discover Services
+```bash
+curl https://your-app.com/api/agent/services
+```
+
+### 2. Purchase Credits
+```bash
+curl -X POST https://your-app.com/api/agent/purchase \
+  -H "Content-Type: application/json" \
+  -d '{"planId": "single_scan", "agentId": "my-agent"}'
+```
+→ Returns Locus Checkout URL + credit token
+
+### 3. Scan an Email
+```bash
+curl -X POST https://your-app.com/api/agent/scan \
+  -H "Content-Type: application/json" \
+  -H "x-credit-token: YOUR_TOKEN" \
+  -d '{"emailContent": "From: phisher@evil.com\nSubject: Urgent\n\nClick here..."}'
+```
+→ Returns structured threat report:
+```json
+{
+  "threat": { "score": 92, "verdict": "DANGEROUS", "summary": "..." },
+  "authentication": { "spf": "fail", "dkim": "none", "dmarc": "fail" },
+  "credits": { "remaining": 14 }
+}
+```
+
+### 4. When Credits Run Out → HTTP 402
+```json
+{
+  "error": "NO_CREDITS",
+  "purchase": { "endpoint": "/api/agent/purchase", "currency": "USDC" },
+  "x402": { "paymentRequired": true }
+}
+```
 
 ---
 
@@ -86,39 +143,30 @@ PhishFilter is an advanced email forensics platform that combines multiple AI en
 phishfilter/
 ├── app/
 │   ├── api/
-│   │   ├── analyze/route.ts    # Main analysis pipeline
-│   │   ├── notify/route.ts     # Email + WhatsApp notifications
-│   │   ├── tts/route.ts        # Sarvam AI TTS proxy
-│   │   ├── ipinfo/route.ts     # IP geolocation
-│   │   ├── screenshot/route.ts # URL screenshot
-│   │   └── virustotal/route.ts # VirusTotal scanning
-│   ├── page.tsx                # Main app page
-│   ├── layout.tsx              # Root layout + SEO
-│   └── globals.css             # Design system
-├── components/
-│   ├── EmailInput.tsx           # Email paste interface
-│   ├── ForensicReport.tsx       # Full report dashboard
-│   ├── HeaderHopMap.tsx         # Interactive world map
-│   ├── ThreatTimeline.tsx       # Session analysis history
-│   ├── VoiceVerdict.tsx         # TTS audio player
-│   ├── PDFExport.tsx            # PDF report generator
-│   ├── RiskBadge.tsx            # Verdict badge component
-│   ├── ScreenshotPreview.tsx    # Safe URL preview
-│   └── ErrorBoundary.tsx        # Error handling wrapper
+│   │   ├── agent/
+│   │   │   ├── services/route.ts   # Agent service catalog
+│   │   │   ├── purchase/route.ts   # Agent checkout sessions
+│   │   │   └── scan/route.ts       # Agent scan endpoint
+│   │   ├── analyze/route.ts        # Main analysis pipeline (credit-gated)
+│   │   ├── checkout/create/route.ts # Locus session creation
+│   │   ├── webhooks/locus/route.ts # Payment webhook handler
+│   │   └── credits/route.ts        # Credit balance API
+│   ├── pricing/page.tsx            # Glassmorphism pricing page
+│   ├── success/page.tsx            # Payment success + confetti
+│   ├── cancel/page.tsx             # Cancellation page
+│   ├── scan/page.tsx               # Scanner with credit badge
+│   └── page.tsx                    # Landing page
 ├── lib/
-│   ├── parser.ts                # Email header parser (RFC 2822)
-│   ├── grok.ts                  # Grok AI analysis
-│   ├── firecrawl.ts             # URL scraping
-│   ├── locus.ts                 # Locus API (VT, IP, Screenshot)
-│   ├── homograph.ts             # Unicode attack detection
-│   └── demo-data.ts             # Sample email + mock report
-├── extension/
-│   ├── manifest.json            # Chrome extension manifest v3
-│   ├── content.js               # Gmail content script
-│   ├── content.css              # Injected styles
-│   ├── popup.html               # Extension popup UI
-│   ├── popup.js                 # Popup logic
-│   └── icon.png                 # Extension icon
+│   ├── locus-checkout.ts           # Locus Checkout SDK wrapper
+│   ├── credits.ts                  # Credit management system
+│   ├── grok.ts                     # Multi-AI analysis (Gemini/Claude/Grok)
+│   ├── parser.ts                   # Email header parser (RFC 2822)
+│   └── homograph.ts                # Unicode attack detection
+├── public/
+│   ├── skill.md                    # Agent skill descriptor
+│   └── .well-known/
+│       ├── ai-plugin.json          # Plugin manifest
+│       └── openapi.json            # OpenAPI 3.1 spec
 └── README.md
 ```
 
@@ -127,25 +175,25 @@ phishfilter/
 ## 🚀 Setup Instructions
 
 ### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- Chrome browser (for extension)
+- Node.js 18+
+- npm
 
 ### 1. Install Dependencies
 ```bash
-cd phishfilter
 npm install
 ```
 
 ### 2. Configure Environment
-Create `.env.local` with your API keys:
+Create `.env.local`:
 ```env
-GROK_API_KEY=your_xai_api_key
-FIRECRAWL_API_KEY=your_firecrawl_key
-LOCUS_API_KEY=your_locus_key
+LOCUS_API_KEY=your_locus_api_key
+LOCUS_WEBHOOK_SECRET=your_webhook_secret
+ANTHROPIC_API_KEY=your_anthropic_key
 GEMINI_API_KEY=your_gemini_key
+GROK_API_KEY=your_grok_key
+FIRECRAWL_API_KEY=your_firecrawl_key
 SARVAM_API_KEY=your_sarvam_key
-GUMLOOP_WEBHOOK_URL=your_gumloop_webhook
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ### 3. Run Development Server
@@ -154,69 +202,64 @@ npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000)
 
-### 4. Install Chrome Extension
-1. Navigate to `chrome://extensions/`
-2. Enable **Developer mode** (top-right toggle)
-3. Click **Load unpacked**
-4. Select the `extension/` folder
-5. Open Gmail — look for the "🛡️ Scan with PhishFilter" button
-
-### 5. Deploy to Vercel
+### 4. Build for Production
 ```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel --prod
+npm run build  # ✅ Verified — compiles clean
 ```
-Add all environment variables in the Vercel dashboard under Settings → Environment Variables.
-
-After deployment, update `extension/content.js` and `extension/popup.html` with your production URL.
-
----
-
-## 🎮 Demo Mode
-
-For hackathon presentations when APIs may be slow:
-
-1. Click the **"Demo"** toggle in the navbar
-2. Click **"Load Sample Phishing Email"** to pre-fill a realistic phishing email
-3. Click **"Scan Email"** — instant mock HIGH_RISK report appears in ~2 seconds
 
 ---
 
 ## 🔗 API Endpoints
 
+### Human-Facing
 | Endpoint | Method | Description |
 |---|---|---|
-| `/api/analyze` | POST | Main analysis pipeline |
-| `/api/notify` | POST | Send email/WhatsApp notifications |
-| `/api/tts` | POST | Text-to-speech via Sarvam AI |
-| `/api/virustotal` | POST | VirusTotal URL scanning |
-| `/api/ipinfo` | GET | IP geolocation lookup |
-| `/api/screenshot` | GET | URL screenshot capture |
+| `/api/analyze` | POST | Main scan pipeline (credit-gated) |
+| `/api/checkout/create` | POST | Create Locus Checkout session |
+| `/api/webhooks/locus` | POST | Locus payment webhook |
+| `/api/credits` | GET | Check credit balance |
+
+### Agent-Facing
+| Endpoint | Method | Auth | Description |
+|---|---|---|---|
+| `/api/agent/services` | GET | No | Service catalog & pricing |
+| `/api/agent/purchase` | POST | No | Create checkout session |
+| `/api/agent/scan` | POST | Token | Submit email for analysis |
+| `/skill.md` | GET | No | Machine-readable skill descriptor |
+| `/.well-known/ai-plugin.json` | GET | No | Plugin manifest |
+| `/.well-known/openapi.json` | GET | No | OpenAPI 3.1 spec |
 
 ---
 
-## 🎥 Demo Video
+## 🔄 Payment Flow
 
-> _[Insert demo video link here]_
+```
+Human Flow:
+  Paste email → Scan → 402 (no credits) → /pricing → Locus Checkout → USDC payment
+  → Webhook → Credits added → Scan succeeds → Forensic report
+
+Agent Flow:
+  GET /api/agent/services → discover capabilities
+  POST /api/agent/purchase → get checkout URL
+  Complete USDC payment → webhook → credits added
+  POST /api/agent/scan → structured threat report
+  402 when exhausted → purchase more
+```
 
 ---
 
 ## 👥 Team
 
-> _[Insert team details here]_
+**Dhiraj Rathod** — Full-stack development, AI integration, Locus Checkout implementation
 
 ---
 
 ## 📄 License
 
-Built for hackathon purposes. All rights reserved.
+Built for the Paygentic Hackathon Week 3. All rights reserved.
 
 ---
 
 <p align="center">
-  <strong>PhishFilter</strong> — Because every email deserves a second look. 🛡️
+  <strong>PhishFilter × Locus</strong> — Security-as-a-Service, powered by USDC. 🛡️💰
 </p>
-# Phish_filter

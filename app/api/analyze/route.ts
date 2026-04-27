@@ -22,6 +22,7 @@ import { scrapeUrls } from "@/lib/firecrawl";
 import { scanUrlsVirusTotal, getIpsInfo, getScreenshot } from "@/lib/locus";
 import { analyzeEmail } from "@/lib/grok";
 import { sandboxScanUrls, LinkAnalysis } from "@/lib/sandbox";
+import { getCreditToken, canScan, consumeCredit, getCredits } from "@/lib/credits";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -102,6 +103,43 @@ export async function POST(request: NextRequest) {
         { status: 413 }
       );
     }
+
+    // ── 1.5 Credit Check (Locus Checkout integration) ──────────────
+    // Check if user has scan credits (free tier, paid, or pro)
+    const creditToken = getCreditToken(request.headers);
+    const creditInfo = getCredits(creditToken);
+
+    if (!canScan(creditToken)) {
+      console.log(
+        `[Pipeline] ⛔ No credits for ${creditToken} — ` +
+        `credits: ${creditInfo.credits}, free: ${creditInfo.freeScansRemaining}`
+      );
+      return NextResponse.json(
+        {
+          error: "NO_CREDITS",
+          message: "You have used all your free scans for today. Purchase credits to continue.",
+          credits: creditInfo,
+          pricingUrl: "/pricing",
+        },
+        { status: 402 } // HTTP 402 Payment Required
+      );
+    }
+
+    // Deduct one credit
+    const deducted = consumeCredit(creditToken);
+    if (!deducted) {
+      return NextResponse.json(
+        { error: "NO_CREDITS", message: "Credit deduction failed", pricingUrl: "/pricing" },
+        { status: 402 }
+      );
+    }
+
+    const updatedCredits = getCredits(creditToken);
+    console.log(
+      `[Pipeline] ✅ Credit used for ${creditToken} — ` +
+      `remaining: ${updatedCredits.credits}, free: ${updatedCredits.freeScansRemaining}, ` +
+      `pro: ${updatedCredits.isPro}`
+    );
 
     // ── 2. Parse email headers and body ────────────────────────────
     const parseStart = Date.now();

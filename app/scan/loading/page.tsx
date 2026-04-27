@@ -105,11 +105,24 @@ export default function ScanLoadingPage() {
       
       fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-credit-token": localStorage.getItem("phishfilter_credit_token") || "",
+        },
         body: JSON.stringify({ emailContent, userEmail, userPhone }),
       })
-        .then((res) => res.json())
-        .then((data) => {
+        .then(async (res) => {
+          const data = await res.json();
+
+          // Handle 402 Payment Required — no credits
+          if (res.status === 402 || data.error === "NO_CREDITS") {
+            setScanError("No scan credits remaining. Redirecting to pricing...");
+            setTimeout(() => {
+              window.location.href = "/pricing";
+            }, 2000);
+            return;
+          }
+
           if (!data.success) throw new Error(data.error || "Analysis failed");
           sessionStorage.setItem("phishfilter_report", JSON.stringify(data));
           setScanComplete(true);

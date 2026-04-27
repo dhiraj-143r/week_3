@@ -1,0 +1,152 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PhishFilter Agent API",
+    "version": "1.0.0",
+    "description": "AI-powered email phishing detection API. Pay-per-scan with USDC via Locus Checkout."
+  },
+  "servers": [{ "url": "http://localhost:3000" }],
+  "paths": {
+    "/api/agent/services": {
+      "get": {
+        "operationId": "getServiceCatalog",
+        "summary": "Service catalog & pricing",
+        "description": "Returns full service catalog, capabilities, pricing plans, and API documentation.",
+        "responses": {
+          "200": {
+            "description": "Service catalog",
+            "content": { "application/json": {} }
+          }
+        }
+      }
+    },
+    "/api/agent/purchase": {
+      "get": {
+        "operationId": "getAvailablePlans",
+        "summary": "List available plans",
+        "responses": {
+          "200": { "description": "Available pricing plans" }
+        }
+      },
+      "post": {
+        "operationId": "createCheckoutSession",
+        "summary": "Create Locus Checkout session",
+        "description": "Creates a USDC checkout session via Locus. Returns checkout URL for payment.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["planId"],
+                "properties": {
+                  "planId": {
+                    "type": "string",
+                    "enum": ["single_scan", "scan_pack_15", "pro_monthly"],
+                    "description": "Pricing plan ID"
+                  },
+                  "agentId": {
+                    "type": "string",
+                    "description": "Optional agent identifier for credit tracking"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Checkout session created" },
+          "400": { "description": "Invalid plan ID" }
+        }
+      }
+    },
+    "/api/agent/scan": {
+      "get": {
+        "operationId": "getScanDocumentation",
+        "summary": "Scan endpoint documentation",
+        "responses": {
+          "200": { "description": "Endpoint docs and example" }
+        }
+      },
+      "post": {
+        "operationId": "scanEmail",
+        "summary": "Scan email for phishing",
+        "description": "Submit raw email content for AI-powered phishing analysis. Requires credits.",
+        "parameters": [
+          {
+            "name": "x-credit-token",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Credit token from purchase flow"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["emailContent"],
+                "properties": {
+                  "emailContent": {
+                    "type": "string",
+                    "description": "Raw email content including headers and body"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scan completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "threat": {
+                      "type": "object",
+                      "properties": {
+                        "score": { "type": "number", "minimum": 0, "maximum": 100 },
+                        "verdict": { "type": "string", "enum": ["SAFE", "SUSPICIOUS", "DANGEROUS"] },
+                        "summary": { "type": "string" }
+                      }
+                    },
+                    "credits": {
+                      "type": "object",
+                      "properties": {
+                        "remaining": { "type": "number" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "402": { "description": "No credits — payment required. Includes purchase instructions." },
+          "400": { "description": "Invalid request" }
+        }
+      }
+    },
+    "/api/credits": {
+      "get": {
+        "operationId": "checkCredits",
+        "summary": "Check credit balance",
+        "parameters": [
+          {
+            "name": "x-credit-token",
+            "in": "header",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Credit balance" }
+        }
+      }
+    }
+  }
+}

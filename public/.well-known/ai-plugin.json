@@ -1,0 +1,45 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "PhishFilter",
+  "name_for_model": "phishfilter",
+  "description_for_human": "AI-powered email phishing detection. Paste any email for instant forensic analysis — SPF/DKIM/DMARC checks, VirusTotal URL scanning, homograph detection, and Grok AI threat assessment.",
+  "description_for_model": "PhishFilter is a Security-as-a-Service API that analyzes raw email content for phishing threats. It performs SPF/DKIM/DMARC authentication, scans URLs via VirusTotal (70+ engines), detects homograph attacks, traces IP hops, and uses Grok AI for forensic analysis. Returns structured threat reports with scores (0-100), verdicts (SAFE/SUSPICIOUS/DANGEROUS), and red flags. Accepts USDC payments via Locus Checkout on Base network. Free tier: 3 scans/day. Use GET /api/agent/services for full catalog.",
+  "auth": {
+    "type": "none",
+    "instructions": "Free tier: 3 scans/day with no auth. For paid scans, POST to /api/agent/purchase to get a credit token, then include 'x-credit-token' header in scan requests."
+  },
+  "api": {
+    "type": "openapi",
+    "url": "/.well-known/openapi.json"
+  },
+  "payment": {
+    "provider": "locus",
+    "currency": "USDC",
+    "network": "base",
+    "checkout_url": "/api/agent/purchase",
+    "x402_supported": true,
+    "plans": [
+      {
+        "id": "single_scan",
+        "name": "Single Deep Scan",
+        "price": "0.50",
+        "credits": 1
+      },
+      {
+        "id": "scan_pack_15",
+        "name": "Scan Pack",
+        "price": "5.00",
+        "credits": 15
+      },
+      {
+        "id": "pro_monthly",
+        "name": "Pro Monthly",
+        "price": "20.00",
+        "credits": -1
+      }
+    ]
+  },
+  "logo_url": "/shield-icon.png",
+  "contact_email": "rathoddhiraj310@gmail.com",
+  "legal_info_url": "/terms"
+}

@@ -219,7 +219,7 @@ function sanitizeEmailContent(raw: string): string {
   text = text.trim();
 
   // 8. Reconstruct: headers + cleaned body + unique URLs
-  const uniqueUrls = [...new Set(urlMatches)];
+  const uniqueUrls = Array.from(new Set(urlMatches));
   const urlSection = uniqueUrls.length > 0
     ? `\n\n=== EXTRACTED URLs ===\n${uniqueUrls.join("\n")}`
     : "";

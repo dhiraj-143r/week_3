@@ -94,6 +94,7 @@ export default function Home() {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <a href="#how" className="btn-ghost">How it works</a>
             <a href="#capabilities" className="btn-ghost">Features</a>
+            <Link href="/pricing" className="btn-ghost" style={{ textDecoration: "none" }}>Pricing</Link>
             <Link href="/scan" className="btn-primary" style={{ padding: "10px 20px", fontSize: "0.85rem", textDecoration: "none" }}>
               Start scanning
             </Link>
@@ -370,6 +371,10 @@ export default function Home() {
           <span>12+ Security Checks</span>
           <span>Real-time Monitoring</span>
           <span>AI-Powered Verdicts</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ color: '#5934FF', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.06em' }}>LOCUS</span>
+            Pay with USDC
+          </span>
         </div>
       </section>
 
@@ -567,7 +572,7 @@ export default function Home() {
               <Link href="/scan" className="btn-primary" style={{ padding: "16px 32px", textDecoration: "none" }}>
                 Start scanning
               </Link>
-              <a href="#how" className="btn-secondary" style={{ padding: "16px 32px" }}>Learn more</a>
+              <Link href="/pricing" className="btn-secondary" style={{ padding: "16px 32px", textDecoration: "none" }}>View pricing</Link>
             </div>
           </AnimSection>
 
@@ -578,7 +583,7 @@ export default function Home() {
               <span style={{ fontWeight: 700, fontSize: "1rem" }}>Filter</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Grok AI · VirusTotal · Firecrawl</span>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Grok AI · VirusTotal · Firecrawl · <span style={{ color: '#5934FF', fontWeight: 600 }}>Locus</span></span>
               <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>© {new Date().getFullYear()}</span>
             </div>
           </div>

@@ -10,6 +10,14 @@ import InboxScanner from "@/components/InboxScanner";
 import EmailWatchdog from "@/components/EmailWatchdog";
 import LinkSandbox from "@/components/LinkSandbox";
 
+interface CreditInfo {
+  credits: number;
+  isPro: boolean;
+  freeScansRemaining: number;
+  totalUsed: number;
+  creditToken: string;
+}
+
 export default function ScanPage() {
   const [activeTab, setActiveTab] = useState<"paste" | "inbox" | "watchdog" | "sandbox">("paste");
   const [demoMode, setDemoMode] = useState(false);
@@ -19,6 +27,7 @@ export default function ScanPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyPhone, setNotifyPhone] = useState("");
+  const [creditInfo, setCreditInfo] = useState<CreditInfo | null>(null);
   
   // Inbox states
   const [inboxEmail, setInboxEmail] = useState("");
@@ -77,9 +86,34 @@ export default function ScanPage() {
 
   const router = useRouter();
 
+  // Fetch credit balance on mount
+  useEffect(() => {
+    const fetchCredits = async () => {
+      try {
+        const token = localStorage.getItem("phishfilter_credit_token") || "";
+        const res = await fetch("/api/credits", {
+          headers: token ? { "x-credit-token": token } : {},
+        });
+        const data = await res.json();
+        setCreditInfo(data);
+        if (data.creditToken) {
+          localStorage.setItem("phishfilter_credit_token", data.creditToken);
+        }
+      } catch {}
+    };
+    fetchCredits();
+  }, []);
+
   const handleScan = async () => {
     if (!emailContent.trim()) {
       toast.error("Please paste an email to scan.");
+      return;
+    }
+
+    // Check credits before scanning
+    if (creditInfo && !creditInfo.isPro && creditInfo.credits <= 0 && creditInfo.freeScansRemaining <= 0) {
+      toast.error("No scan credits remaining. Redirecting to pricing...");
+      setTimeout(() => router.push("/pricing"), 1000);
       return;
     }
     
@@ -240,12 +274,33 @@ export default function ScanPage() {
           <span className="scan-logo-filter">Filter</span>
         </Link>
         <div className="scan-nav-right">
-          <Link href="/#how">How it works</Link>
+          <Link href="/pricing">Pricing</Link>
           <Link href="/#capabilities">Features</Link>
           <button className="scan-live-btn" onClick={() => setDemoMode(!demoMode)}>
             <span className={`scan-live-dot ${demoMode ? 'demo' : ''}`}></span>
             {demoMode ? "Demo" : "Live"}
           </button>
+          {creditInfo && (
+            <Link href="/pricing" style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '5px 12px', borderRadius: 8,
+              background: creditInfo.isPro ? 'rgba(65,1,246,0.12)' : 'rgba(255,255,255,0.06)',
+              border: `1px solid ${creditInfo.isPro ? 'rgba(65,1,246,0.25)' : 'rgba(255,255,255,0.08)'}`,
+              fontSize: 11, fontWeight: 600, textDecoration: 'none',
+              color: creditInfo.isPro ? '#5934FF' : 'rgba(255,255,255,0.5)',
+              transition: 'all 0.2s',
+            }}>
+              <span style={{
+                width: 6, height: 6, borderRadius: '50%',
+                background: creditInfo.isPro ? '#5934FF' : creditInfo.credits > 0 ? '#22c55e' : creditInfo.freeScansRemaining > 0 ? '#eab308' : '#ef4444',
+              }} />
+              {creditInfo.isPro
+                ? 'Pro'
+                : creditInfo.credits > 0
+                ? `${creditInfo.credits} credits`
+                : `${creditInfo.freeScansRemaining} free`}
+            </Link>
+          )}
         </div>
       </nav>
 
@@ -380,7 +435,17 @@ export default function ScanPage() {
                           <svg className="shield-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                           </svg>
-                          Scan Email
+                          {creditInfo && !creditInfo.isPro && creditInfo.credits <= 0 && creditInfo.freeScansRemaining <= 0
+                            ? 'Buy Credits to Scan'
+                            : 'Scan Email'}
+                          {creditInfo && (
+                            <span style={{
+                              fontSize: 10, opacity: 0.5, marginLeft: 4,
+                              fontWeight: 400,
+                            }}>
+                              {creditInfo.isPro ? '∞' : creditInfo.credits > 0 ? `(${creditInfo.credits} left)` : `(${creditInfo.freeScansRemaining} free)`}
+                            </span>
+                          )}
                         </>
                       ) : (
                         <>
