@@ -95,6 +95,7 @@ export default function Home() {
             <a href="#how" className="btn-ghost">How it works</a>
             <a href="#capabilities" className="btn-ghost">Features</a>
             <Link href="/pricing" className="btn-ghost" style={{ textDecoration: "none" }}>Pricing</Link>
+            <a href="#agent-api" className="btn-ghost">API</a>
             <Link href="/scan" className="btn-primary" style={{ padding: "10px 20px", fontSize: "0.85rem", textDecoration: "none" }}>
               Start scanning
             </Link>
@@ -575,6 +576,79 @@ export default function Home() {
               <Link href="/pricing" className="btn-secondary" style={{ padding: "16px 32px", textDecoration: "none" }}>View pricing</Link>
             </div>
           </AnimSection>
+
+          {/* ═══ AGENT API SECTION ═══ */}
+          <div id="agent-api" style={{ marginTop: 80, paddingTop: 48, borderTop: "1px solid var(--border)" }}>
+            <AnimSection>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
+                <span style={{ fontSize: 20 }}>🤖</span>
+                <h3 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 700 }}>For AI Agents & Developers</h3>
+              </div>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", maxWidth: 500, margin: "0 auto 28px", lineHeight: 1.6 }}>
+                PhishFilter is machine-readable. AI agents can discover, purchase credits, and scan emails — all programmatically via USDC.
+              </p>
+            </AnimSection>
+            <AnimSection delay={0.1}>
+              <div style={{
+                display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 12, maxWidth: 700, margin: "0 auto",
+              }}>
+                {[
+                  { label: "Service Catalog", desc: "Capabilities & pricing", href: "/api/agent/services", icon: "📋" },
+                  { label: "Agent Purchase", desc: "Buy credits with USDC", href: "/api/agent/purchase", icon: "💳" },
+                  { label: "Agent Scan API", desc: "Submit emails for analysis", href: "/api/agent/scan", icon: "🔍" },
+                  { label: "Skill File", desc: "Machine-readable descriptor", href: "/skill.md", icon: "📄" },
+                  { label: "AI Plugin", desc: "OpenAI plugin manifest", href: "/.well-known/ai-plugin.json", icon: "🔌" },
+                  { label: "OpenAPI Spec", desc: "Full API specification", href: "/.well-known/openapi.json", icon: "📐" },
+                ].map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "14px 18px", borderRadius: 12,
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                      textDecoration: "none", color: "#fff",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "rgba(89,52,255,0.08)";
+                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(89,52,255,0.25)";
+                      (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
+                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)";
+                      (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+                    }}
+                  >
+                    <span style={{ fontSize: 22 }}>{item.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{item.label}</div>
+                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{item.desc}</div>
+                    </div>
+                    <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(255,255,255,0.2)" }}>→</span>
+                  </a>
+                ))}
+              </div>
+            </AnimSection>
+            <AnimSection delay={0.2}>
+              <div style={{
+                marginTop: 24, padding: "14px 20px", borderRadius: 10,
+                background: "rgba(89,52,255,0.06)", border: "1px solid rgba(89,52,255,0.15)",
+                maxWidth: 500, margin: "24px auto 0",
+                display: "flex", alignItems: "center", gap: 10,
+              }}>
+                <span style={{ color: "#5934FF", fontWeight: 700, fontSize: 11, letterSpacing: "0.08em" }}>x402</span>
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
+                  Scan endpoint returns HTTP 402 with payment instructions when credits are exhausted
+                </span>
+              </div>
+            </AnimSection>
+          </div>
 
           {/* Footer bar */}
           <div style={{ marginTop: 80, paddingTop: 32, borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
