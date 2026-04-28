@@ -284,15 +284,15 @@ export default function ScanPage() {
             <Link href="/pricing" style={{
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '5px 12px', borderRadius: 8,
-              background: creditInfo.isPro ? 'rgba(65,1,246,0.12)' : 'rgba(255,255,255,0.06)',
-              border: `1px solid ${creditInfo.isPro ? 'rgba(65,1,246,0.25)' : 'rgba(255,255,255,0.08)'}`,
+              background: creditInfo.isPro ? 'rgba(6,182,212,0.12)' : 'rgba(255,255,255,0.06)',
+              border: `1px solid ${creditInfo.isPro ? 'rgba(6,182,212,0.25)' : 'rgba(255,255,255,0.08)'}`,
               fontSize: 11, fontWeight: 600, textDecoration: 'none',
-              color: creditInfo.isPro ? '#5934FF' : 'rgba(255,255,255,0.5)',
+              color: creditInfo.isPro ? '#06b6d4' : 'rgba(255,255,255,0.5)',
               transition: 'all 0.2s',
             }}>
               <span style={{
                 width: 6, height: 6, borderRadius: '50%',
-                background: creditInfo.isPro ? '#5934FF' : creditInfo.credits > 0 ? '#22c55e' : creditInfo.freeScansRemaining > 0 ? '#eab308' : '#ef4444',
+                background: creditInfo.isPro ? '#06b6d4' : creditInfo.credits > 0 ? '#22c55e' : creditInfo.freeScansRemaining > 0 ? '#f59e0b' : '#ef4444',
               }} />
               {creditInfo.isPro
                 ? 'Pro'

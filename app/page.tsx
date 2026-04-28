@@ -373,7 +373,7 @@ export default function Home() {
           <span>Real-time Monitoring</span>
           <span>AI-Powered Verdicts</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ color: '#5934FF', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.06em' }}>LOCUS</span>
+            <span style={{ color: '#06b6d4', fontWeight: 700, fontSize: '0.7rem', letterSpacing: '0.06em' }}>LOCUS</span>
             Pay with USDC
           </span>
         </div>
@@ -615,8 +615,8 @@ export default function Home() {
                       transition: "all 0.2s",
                     }}
                     onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = "rgba(89,52,255,0.08)";
-                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(89,52,255,0.25)";
+                      (e.currentTarget as HTMLElement).style.background = "rgba(6,182,212,0.08)";
+                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(6,182,212,0.25)";
                       (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
                     }}
                     onMouseLeave={(e) => {
@@ -638,11 +638,11 @@ export default function Home() {
             <AnimSection delay={0.2}>
               <div style={{
                 marginTop: 24, padding: "14px 20px", borderRadius: 10,
-                background: "rgba(89,52,255,0.06)", border: "1px solid rgba(89,52,255,0.15)",
+                background: "rgba(6,182,212,0.06)", border: "1px solid rgba(6,182,212,0.15)",
                 maxWidth: 500, margin: "24px auto 0",
                 display: "flex", alignItems: "center", gap: 10,
               }}>
-                <span style={{ color: "#5934FF", fontWeight: 700, fontSize: 11, letterSpacing: "0.08em" }}>x402</span>
+                <span style={{ color: "#06b6d4", fontWeight: 700, fontSize: 11, letterSpacing: "0.08em" }}>x402</span>
                 <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
                   Scan endpoint returns HTTP 402 with payment instructions when credits are exhausted
                 </span>
@@ -657,7 +657,7 @@ export default function Home() {
               <span style={{ fontWeight: 700, fontSize: "1rem" }}>Filter</span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Grok AI · VirusTotal · Firecrawl · <span style={{ color: '#5934FF', fontWeight: 600 }}>Locus</span></span>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Grok AI · VirusTotal · Firecrawl · <span style={{ color: '#06b6d4', fontWeight: 600 }}>Locus</span></span>
               <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>© {new Date().getFullYear()}</span>
             </div>
           </div>

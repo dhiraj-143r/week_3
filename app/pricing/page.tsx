@@ -153,8 +153,8 @@ export default function PricingPage() {
           font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 500;
         }
         .credit-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
-        .credit-badge.pro { border-color: rgba(65,1,246,0.3); background: rgba(65,1,246,0.1); }
-        .credit-badge.pro .dot { background: #5934FF; }
+        .credit-badge.pro { border-color: rgba(6,182,212,0.3); background: rgba(6,182,212,0.1); }
+        .credit-badge.pro .dot { background: #06b6d4; }
 
         .pricing-container {
           max-width: 1200px; margin: 0 auto; padding: 80px 40px 100px;
@@ -198,27 +198,27 @@ export default function PricingPage() {
         .plan-card:hover {
           transform: translateY(-6px);
           border-color: rgba(255,255,255,0.12);
-          box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 40px rgba(65,1,246,0.05);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 40px rgba(6,182,212,0.05);
         }
         .plan-card.popular {
-          border-color: rgba(65,1,246,0.3);
-          box-shadow: 0 0 40px rgba(65,1,246,0.08);
+          border-color: rgba(6,182,212,0.3);
+          box-shadow: 0 0 40px rgba(6,182,212,0.08);
         }
         .plan-card.popular:hover {
-          border-color: rgba(65,1,246,0.5);
-          box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 60px rgba(65,1,246,0.12);
+          border-color: rgba(6,182,212,0.5);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 60px rgba(6,182,212,0.12);
         }
         .plan-card.popular::before {
           content: '';
           position: absolute; inset: -1px; border-radius: 20px;
-          background: linear-gradient(135deg, rgba(65,1,246,0.2), transparent 60%);
+          background: linear-gradient(135deg, rgba(6,182,212,0.2), transparent 60%);
           z-index: -1;
         }
 
         .popular-badge {
           position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
           padding: 4px 16px; border-radius: 12px;
-          background: linear-gradient(180deg, #5934FF 0%, #4101F6 100%);
+          background: linear-gradient(180deg, #06b6d4 0%, #0891b2 100%);
           font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
           color: #fff; text-transform: uppercase; white-space: nowrap;
         }
@@ -259,7 +259,7 @@ export default function PricingPage() {
           background: rgba(34,197,94,0.12); color: #22c55e; font-size: 9px;
         }
         .popular .plan-features li .check {
-          background: rgba(65,1,246,0.15); color: #5934FF;
+          background: rgba(6,182,212,0.15); color: #06b6d4;
         }
 
         .plan-btn {
@@ -277,11 +277,11 @@ export default function PricingPage() {
           color: #fff; transform: translateY(-1px);
         }
         .plan-btn.primary {
-          background: linear-gradient(180deg, #5934FF 0%, #4101F6 100%);
-          color: #fff; box-shadow: 0 4px 20px rgba(65,1,246,0.3);
+          background: linear-gradient(180deg, #06b6d4 0%, #0891b2 100%);
+          color: #fff; box-shadow: 0 4px 20px rgba(6,182,212,0.3);
         }
         .plan-btn.primary:hover {
-          box-shadow: 0 6px 30px rgba(65,1,246,0.45);
+          box-shadow: 0 6px 30px rgba(6,182,212,0.45);
           transform: translateY(-2px);
         }
         .plan-btn:disabled {
@@ -306,7 +306,7 @@ export default function PricingPage() {
           font-size: 12px; color: rgba(255,255,255,0.3);
         }
         .powered-by .locus-logo {
-          font-weight: 700; color: #5934FF; letter-spacing: 0.05em;
+          font-weight: 700; color: #06b6d4; letter-spacing: 0.05em;
         }
         .usdc-badge {
           display: inline-flex; align-items: center; gap: 6px;

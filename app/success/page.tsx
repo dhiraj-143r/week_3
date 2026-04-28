@@ -41,7 +41,7 @@ function SuccessContent() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const colors = ["#5934FF", "#4101F6", "#22c55e", "#eab308", "#ef4444", "#38bdf8", "#a855f7"];
+    const colors = ["#06b6d4", "#0891b2", "#22c55e", "#f59e0b", "#ef4444", "#38bdf8", "#d97706"];
     const pieces = Array.from({ length: 120 }, () => ({
       x: Math.random() * canvas.width,
       y: -20 - Math.random() * 200,
@@ -147,7 +147,7 @@ function SuccessContent() {
           font-size: 16px; color: #fff; font-weight: 600;
         }
         .success-detail-value.green { color: #22c55e; }
-        .success-detail-value.purple { color: #5934FF; }
+        .success-detail-value.purple { color: #06b6d4; }
 
         .success-actions {
           display: flex; gap: 16px;
@@ -159,12 +159,12 @@ function SuccessContent() {
           text-decoration: none; display: flex; align-items: center; gap: 8px;
         }
         .success-btn.primary {
-          background: linear-gradient(180deg, #5934FF 0%, #4101F6 100%);
+          background: linear-gradient(180deg, #06b6d4 0%, #0891b2 100%);
           color: #fff; border: none;
-          box-shadow: 0 4px 20px rgba(65,1,246,0.3);
+          box-shadow: 0 4px 20px rgba(6,182,212,0.3);
         }
         .success-btn.primary:hover {
-          box-shadow: 0 6px 30px rgba(65,1,246,0.45);
+          box-shadow: 0 6px 30px rgba(6,182,212,0.45);
           transform: translateY(-2px);
         }
         .success-btn.secondary {
