@@ -126,7 +126,7 @@ function SuccessContent() {
           opacity: 0; animation: fadeUp 0.5s ease 0.3s forwards;
         }
         .success-subtitle {
-          font-size: 15px; color: rgba(255,255,255,0.4); margin: 0 0 32px;
+          font-size: 15px; color: rgba(255,255,255,0.6); margin: 0 0 32px;
           opacity: 0; animation: fadeUp 0.5s ease 0.5s forwards;
         }
 
@@ -140,7 +140,7 @@ function SuccessContent() {
           text-align: center;
         }
         .success-detail-label {
-          font-size: 10px; letter-spacing: 0.12em; color: rgba(255,255,255,0.3);
+          font-size: 10px; letter-spacing: 0.12em; color: rgba(255,255,255,0.5);
           text-transform: uppercase; margin-bottom: 6px; font-weight: 600;
         }
         .success-detail-value {

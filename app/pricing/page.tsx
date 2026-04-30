@@ -142,15 +142,15 @@ export default function PricingPage() {
         .pricing-logo-f { font-weight: 700; color: rgba(255,255,255,0.5); }
         .pricing-nav-links { display: flex; align-items: center; gap: 24px; }
         .pricing-nav-links a {
-          font-size: 13px; color: rgba(255,255,255,0.4); text-decoration: none; transition: 0.2s;
+          font-size: 14px; color: rgba(255,255,255,0.55); text-decoration: none; transition: 0.2s;
         }
-        .pricing-nav-links a:hover { color: rgba(255,255,255,0.8); }
+        .pricing-nav-links a:hover { color: #fff; }
 
         .credit-badge {
           display: flex; align-items: center; gap: 6px;
           padding: 6px 14px; border-radius: 8px;
           background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
-          font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 500;
+          font-size: 12px; color: rgba(255,255,255,0.7); font-weight: 500;
         }
         .credit-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
         .credit-badge.pro { border-color: rgba(6,182,212,0.3); background: rgba(6,182,212,0.1); }
@@ -172,7 +172,7 @@ export default function PricingPage() {
           font-weight: 400; line-height: 1.15;
         }
         .pricing-subtitle {
-          font-size: 15px; color: rgba(255,255,255,0.4); max-width: 520px; margin: 0 auto;
+          font-size: 15px; color: rgba(255,255,255,0.6); max-width: 520px; margin: 0 auto;
           line-height: 1.7;
         }
         .pricing-free-note {
@@ -227,7 +227,7 @@ export default function PricingPage() {
           font-size: 18px; font-weight: 600; color: #fff; margin: 0 0 6px;
         }
         .plan-desc {
-          font-size: 13px; color: rgba(255,255,255,0.35); margin: 0 0 28px;
+          font-size: 13px; color: rgba(255,255,255,0.5); margin: 0 0 28px;
         }
         .plan-price-row {
           display: flex; align-items: baseline; gap: 6px; margin-bottom: 32px;
@@ -241,7 +241,7 @@ export default function PricingPage() {
           letter-spacing: -0.03em; line-height: 1;
         }
         .plan-period {
-          font-size: 14px; color: rgba(255,255,255,0.25); font-weight: 400;
+          font-size: 14px; color: rgba(255,255,255,0.4); font-weight: 400;
         }
 
         .plan-features {
@@ -250,7 +250,7 @@ export default function PricingPage() {
         }
         .plan-features li {
           display: flex; align-items: flex-start; gap: 10px;
-          font-size: 13px; color: rgba(255,255,255,0.5);
+          font-size: 13px; color: rgba(255,255,255,0.65);
           padding: 8px 0; line-height: 1.5;
         }
         .plan-features li .check {

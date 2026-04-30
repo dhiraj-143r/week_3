@@ -36,7 +36,7 @@ export default function CancelPage() {
           font-size: 1.8rem; margin: 0 0 8px; font-weight: 400;
         }
         .cancel-subtitle {
-          font-size: 14px; color: rgba(255,255,255,0.35); margin: 0 0 12px;
+          font-size: 14px; color: rgba(255,255,255,0.55); margin: 0 0 12px;
           text-align: center; max-width: 400px; line-height: 1.7;
         }
         .cancel-free-note {
@@ -61,7 +61,7 @@ export default function CancelPage() {
           transform: translateY(-1px);
         }
         .cancel-btn.ghost {
-          background: transparent; color: rgba(255,255,255,0.3);
+          background: transparent; color: rgba(255,255,255,0.5);
           border: none;
         }
         .cancel-btn.ghost:hover {

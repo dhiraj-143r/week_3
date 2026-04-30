@@ -286,9 +286,10 @@ export default function Home() {
           }
           .hero-bottom-bar span {
             font-family: 'Inter', -apple-system, sans-serif;
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.5);
+            font-size: 0.85rem;
+            color: #fff;
             letter-spacing: 0.03em;
+            font-weight: 500;
           }
 
           /* ── Responsive ───────────────────────── */
@@ -312,7 +313,7 @@ export default function Home() {
           <p className="hero-label" style={{
             fontSize: "0.7rem", fontWeight: 600,
             letterSpacing: "0.15em", textTransform: "uppercase" as const,
-            color: "rgba(255,255,255,0.4)", marginBottom: 20,
+            color: "rgba(255,255,255,0.6)", marginBottom: 20,
           }}>
             PHISHFILTER · AI SECURITY AGENT
           </p>
@@ -524,7 +525,7 @@ export default function Home() {
 
         {/* Content — z-index 2 */}
         <div className="container" style={{ position: "relative", zIndex: 2 }}>
-          <AnimSection><p className="section-label" style={{ color: "rgba(255,255,255,0.45)" }}>THE PROBLEM</p></AnimSection>
+          <AnimSection><p className="section-label" style={{ color: "rgba(255,255,255,0.6)" }}>THE PROBLEM</p></AnimSection>
           <AnimSection delay={0.1}>
             <h2 className="section-heading" style={{ maxWidth: 700, color: "#fff" }}>
               Phishing attacks succeed <span className="serif-italic">because you can&apos;t see them coming.</span>
@@ -580,26 +581,28 @@ export default function Home() {
           {/* ═══ AGENT API SECTION ═══ */}
           <div id="agent-api" style={{ marginTop: 80, paddingTop: 48, borderTop: "1px solid var(--border)" }}>
             <AnimSection>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
-                <span style={{ fontSize: 20 }}>🤖</span>
-                <h3 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 700 }}>For AI Agents & Developers</h3>
-              </div>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", maxWidth: 500, margin: "0 auto 28px", lineHeight: 1.6 }}>
-                PhishFilter is machine-readable. AI agents can discover, purchase credits, and scan emails — all programmatically via USDC.
+              <p className="section-label" style={{ textAlign: "center" }}>Developer APIs</p>
+              <h3 className="section-heading" style={{ textAlign: "center", fontSize: "clamp(1.8rem, 4vw, 2.5rem)", marginBottom: 12 }}>
+                Built for agents.
+              </h3>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", maxWidth: 440, margin: "0 auto 40px", lineHeight: 1.7, textAlign: "center" }}>
+                AI agents can discover, purchase credits, and scan emails — all programmatically via USDC on Base.
               </p>
             </AnimSection>
+
             <AnimSection delay={0.1}>
               <div style={{
-                display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: 12, maxWidth: 700, margin: "0 auto",
+                display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+                gap: 1, maxWidth: 720, margin: "0 auto",
+                background: "var(--border)", borderRadius: 12, overflow: "hidden",
               }}>
                 {[
-                  { label: "Service Catalog", desc: "Capabilities & pricing", href: "/api/agent/services", icon: "📋" },
-                  { label: "Agent Purchase", desc: "Buy credits with USDC", href: "/api/agent/purchase", icon: "💳" },
-                  { label: "Agent Scan API", desc: "Submit emails for analysis", href: "/api/agent/scan", icon: "🔍" },
-                  { label: "Skill File", desc: "Machine-readable descriptor", href: "/skill.md", icon: "📄" },
-                  { label: "AI Plugin", desc: "OpenAI plugin manifest", href: "/.well-known/ai-plugin.json", icon: "🔌" },
-                  { label: "OpenAPI Spec", desc: "Full API specification", href: "/.well-known/openapi.json", icon: "📐" },
+                  { label: "Service Catalog", path: "/api/agent/services", href: "/api/agent/services" },
+                  { label: "Purchase API", path: "/api/agent/purchase", href: "/api/agent/purchase" },
+                  { label: "Scan API", path: "/api/agent/scan", href: "/api/agent/scan" },
+                  { label: "Skill File", path: "/skill.md", href: "/skill.md" },
+                  { label: "AI Plugin", path: "/.well-known/ai-plugin.json", href: "/.well-known/ai-plugin.json" },
+                  { label: "OpenAPI Spec", path: "/.well-known/openapi.json", href: "/.well-known/openapi.json" },
                 ].map((item) => (
                   <a
                     key={item.href}
@@ -607,46 +610,29 @@ export default function Home() {
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
-                      display: "flex", alignItems: "center", gap: 12,
-                      padding: "14px 18px", borderRadius: 12,
-                      background: "rgba(255,255,255,0.03)",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                      textDecoration: "none", color: "#fff",
-                      transition: "all 0.2s",
+                      display: "flex", flexDirection: "column", gap: 6,
+                      padding: "20px 24px",
+                      background: "var(--bg-card)",
+                      textDecoration: "none",
+                      transition: "background 0.2s",
                     }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = "rgba(6,182,212,0.08)";
-                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(6,182,212,0.25)";
-                      (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
-                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)";
-                      (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-card-hover)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-card)"; }}
                   >
-                    <span style={{ fontSize: 22 }}>{item.icon}</span>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>{item.label}</div>
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{item.desc}</div>
-                    </div>
-                    <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(255,255,255,0.2)" }}>→</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{item.label}</span>
+                    <span style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{item.path}</span>
                   </a>
                 ))}
               </div>
             </AnimSection>
-            <AnimSection delay={0.2}>
-              <div style={{
-                marginTop: 24, padding: "14px 20px", borderRadius: 10,
-                background: "rgba(6,182,212,0.06)", border: "1px solid rgba(6,182,212,0.15)",
-                maxWidth: 500, margin: "24px auto 0",
-                display: "flex", alignItems: "center", gap: 10,
+
+            <AnimSection delay={0.15}>
+              <p style={{
+                textAlign: "center", marginTop: 24,
+                fontSize: 12, color: "var(--text-muted)",
               }}>
-                <span style={{ color: "#06b6d4", fontWeight: 700, fontSize: 11, letterSpacing: "0.08em" }}>x402</span>
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>
-                  Scan endpoint returns HTTP 402 with payment instructions when credits are exhausted
-                </span>
-              </div>
+                Returns <code style={{ fontFamily: "var(--font-mono)", color: "#06b6d4", fontSize: 12 }}>402 Payment Required</code> when credits are exhausted.
+              </p>
             </AnimSection>
           </div>
 
